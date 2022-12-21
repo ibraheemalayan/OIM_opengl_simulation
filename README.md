@@ -29,8 +29,8 @@ to make the project portable, [Docker](https://www.docker.com) containers were u
 
 1. clone the repository
     ```bash
-    git clone https://github.com/ibraheemalayan/first_project_the_big_race.git real_time_project
-    cd real_time_project
+    git clone  https://github.com/ibraheemalayan/OIM_opengl_simulation.git real_time_project_2
+    cd real_time_project_2
     mkdir src/bin
     ```
 
