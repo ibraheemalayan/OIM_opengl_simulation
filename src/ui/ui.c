@@ -23,7 +23,7 @@ void paint_and_swap_frame()
     // Draw the queues
     draw_queues();
 
-    draw_people_in_queues(120);
+    draw_people_in_queues(321);
 
     glutSwapBuffers(); // Swap the buffers (replace current frame with the new one)
 }
@@ -58,7 +58,8 @@ int main(int argc, char **argv)
 {
 
     printf("Starting UI...\n");
-    // srand(time(NULL)); // initialize random seed
+
+    srand(time(NULL)); // initialize random seed
 
     // setup_signals(); // does nothing in standalone mode
 

@@ -11,7 +11,10 @@
 Queue *queue_A1, *queue_A2;
 
 Person *create_person(int id, gender gen, float angriess);
-void add_to_queue_A(Person *person);
+Coordinates get_queue_location_coords_for_index(Queue *queue, int index);
+Coordinates get_queue_location_coords_for_next(Queue *queue);
+void draw_people_in_queues(int people);
+void draw_queues();
 
 Person *create_person(int id, gender gen, float angriess)
 {
@@ -26,6 +29,7 @@ Person *create_person(int id, gender gen, float angriess)
     return person;
 }
 
+// TODO read values from config file
 void initialize_queues(
     Queue *queue_A1,
     Queue *queue_A2)
@@ -43,7 +47,12 @@ void initialize_queues(
     queue_A2->current_people = 0;
 }
 
-Coordinates get_queue_location_coords(Queue *queue, int index)
+Coordinates get_queue_location_coords_for_next(Queue *queue)
+{
+    return get_queue_location_coords_for_index(queue, queue->current_people);
+}
+
+Coordinates get_queue_location_coords_for_index(Queue *queue, int index)
 {
 
     int max_people_per_row = queue->width / PADDING_BETWEEN_PEOPLE;
@@ -60,11 +69,20 @@ Coordinates get_queue_location_coords(Queue *queue, int index)
 
 void draw_people_in_queues(int people)
 {
+
+    // FIXME: calling the display func twice causes current_people to continue instead of reset without those
+    queue_A1->current_people = 0;
+    queue_A2->current_people = 0;
+
     for (size_t i = 0; i < people; i++)
     {
-        Person *person = create_person(i, i % 2, ((float)(i % 8)) * 0.1);
+
+        Person *person = create_person(i, rand() % 2, ((float)(rand() % 8)) * 0.1);
         Queue *q_ptr = (person->gender == Male) ? queue_A1 : queue_A2;
-        person->current_coords = get_queue_location_coords(q_ptr, i);
+
+        person->current_coords = get_queue_location_coords_for_next(q_ptr);
+        q_ptr->current_people += 1;
+
         draw_person(person);
     }
 }
