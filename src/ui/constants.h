@@ -14,6 +14,10 @@
 #define QUEUE_A2_HEIGHT 430
 
 #define PADDING_BETWEEN_PEOPLE 35
+#define STEP_SIZE 10
+
+#define MAX_SPEED_PER_FRAM 0.3
+#define FPS 30
 
 #define RIGHT_DIRECTION 1
 #define LEFT_DIRECTION -1

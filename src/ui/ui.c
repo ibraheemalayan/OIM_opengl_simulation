@@ -1,5 +1,6 @@
 #include "./ui_helper.h"
 #include "./structs.h"
+#include "./globals.h"
 
 void paint_and_swap_frame();
 void background();
@@ -23,7 +24,7 @@ void paint_and_swap_frame()
     // Draw the queues
     draw_queues();
 
-    draw_people_in_queues(321);
+    draw_people_in_queues();
 
     glutSwapBuffers(); // Swap the buffers (replace current frame with the new one)
 }
@@ -34,7 +35,16 @@ void validate_args(int argc, char *argv[])
 
 void recursive_timed_update(int time)
 {
-    // pass
+    if (!simulation_finished)
+    {
+        glutTimerFunc(1000 / FPS, recursive_timed_update, 0);
+    }
+    glutPostRedisplay(); // marks the current window as needing to be redisplayed
+
+    for (int i = 0; i < people_count; i++)
+    {
+        update_person_location(people[i]);
+    }
 }
 
 void setup_ui(int argc, char **argv)
@@ -51,6 +61,23 @@ void setup_ui(int argc, char **argv)
     glutTimerFunc(0, recursive_timed_update, 0); // Call function after specified amount of time
 
     background(); // Background color
+}
+
+void create_people()
+{
+
+    for (int i = 0; i < people_count; i++)
+    {
+
+        gender g = (rand() % 2) ? Male : Female;
+        Queue *q = (g == Male) ? queue_A1 : queue_A2;
+
+        people[i] = create_person(i, q->current_people, g, ((float)(rand() % 8)) * 0.1, q);
+
+        people[i]->destination_coords = get_queue_location_coords_for_index(q, people[i]->index_in_queue);
+
+        q->current_people++;
+    }
 }
 
 /* Main function: GLUT runs as a console application starting at main()  */
@@ -72,6 +99,8 @@ int main(int argc, char **argv)
     queue_A2 = (Queue *)malloc(sizeof(Queue));
 
     initialize_queues(queue_A1, queue_A2);
+
+    create_people();
 
     glutMainLoop(); // Enter the event-processing loop
 

@@ -5,23 +5,25 @@
 #include "../include.h"
 #include "../std.h"
 #include "./structs.h"
+#include "./globals.h"
 #include "./constants.h"
 #include "./shapes.h"
 
-Queue *queue_A1, *queue_A2;
-
-Person *create_person(int id, gender gen, float angriess);
+Person *create_person(int id, int index, gender gen, float angriess, Queue *current_queue);
 Coordinates get_queue_location_coords_for_index(Queue *queue, int index);
 Coordinates get_queue_location_coords_for_next(Queue *queue);
-void draw_people_in_queues(int people);
+void update_person_location(Person *person);
+void draw_people_in_queues();
 void draw_queues();
 
-Person *create_person(int id, gender gen, float angriess)
+Person *create_person(int id, int index, gender gen, float angriess, Queue *current_queue)
 {
     Person *person = (Person *)malloc(sizeof(Person));
 
     person->id = id;
+    person->index_in_queue = index;
     person->gender = gen;
+    person->current_queue = current_queue;
     person->current_coords.x = -1500;
     person->current_coords.y = 0;
     person->angriess = angriess;
@@ -67,25 +69,49 @@ Coordinates get_queue_location_coords_for_index(Queue *queue, int index)
     return coords;
 }
 
-void draw_people_in_queues(int people)
+void draw_people_in_queues()
 {
 
-    // FIXME: calling the display func twice causes current_people to continue instead of reset without those
-    queue_A1->current_people = 0;
-    queue_A2->current_people = 0;
-
-    for (size_t i = 0; i < people; i++)
+    for (int i = 0; i < people_count; i++)
     {
-
-        Person *person = create_person(i, rand() % 2, ((float)(rand() % 8)) * 0.1);
-        Queue *q_ptr = (person->gender == Male) ? queue_A1 : queue_A2;
-
-        person->current_coords = get_queue_location_coords_for_next(q_ptr);
-        q_ptr->current_people += 1;
-
-        draw_person(person);
+        draw_person(people[i]);
     }
 }
+
+void update_person_location(Person *person)
+{
+
+    // update X coordinates
+    if (person->current_coords.x != person->destination_coords.x)
+    {
+
+        float remaing_distance = person->current_coords.x - person->destination_coords.x;
+
+        if ((remaing_distance < STEP_SIZE && remaing_distance > 0) || (remaing_distance > -STEP_SIZE && remaing_distance < 0))
+        {
+            person->current_coords.x = person->destination_coords.x;
+        }
+        else
+        {
+            person->current_coords.x += (remaing_distance > 0) ? -STEP_SIZE : STEP_SIZE;
+        }
+    }
+    // update Y coordinates
+    if (person->current_coords.y != person->destination_coords.y)
+    {
+        float remaing_distance = person->current_coords.y - person->destination_coords.y;
+
+        if ((remaing_distance < STEP_SIZE / 2 && remaing_distance > 0) || (remaing_distance > -STEP_SIZE / 2 && remaing_distance < 0))
+        {
+            person->current_coords.y = person->destination_coords.y;
+        }
+        else
+        {
+            person->current_coords.y += (remaing_distance > 0) ? -STEP_SIZE / 2 : STEP_SIZE / 2;
+        }
+    }
+}
+
 void draw_queues()
 {
     draw_rectangle(QUEUE_A1_X_VALUE, QUEUE_A1_Y_VALUE, QUEUE_A1_WIDTH, QUEUE_A1_HEIGHT, 220, 220, 220);

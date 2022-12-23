@@ -17,17 +17,6 @@ struct Coordinations
 
 typedef struct Coordinations Coordinates;
 
-struct Person
-{
-    int id;
-    Coordinates current_coords;
-    Coordinates destination_coords;
-    float angriess; // current waited time out of max patience
-    float speed;
-    gender gender;
-};
-typedef struct Person Person;
-
 struct Queue
 {
     Coordinates coords;
@@ -37,5 +26,18 @@ struct Queue
 };
 
 typedef struct Queue Queue;
+
+struct Person
+{
+    int id;
+    Coordinates current_coords;
+    Coordinates destination_coords;
+    float angriess; // current waited time out of max patience
+    float speed;
+    gender gender;
+    int index_in_queue;
+    Queue *current_queue;
+};
+typedef struct Person Person;
 
 #endif

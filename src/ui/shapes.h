@@ -48,9 +48,9 @@ void draw_person(Person *p)
     {
         glBegin(GL_TRIANGLES);
         glColor3ub(255 * p->angriess, 0, 0);
-        glVertex2f(p->current_coords.x + 15, p->current_coords.y);
-        glVertex2f(p->current_coords.x - 15, p->current_coords.y);
-        glVertex2f(p->current_coords.x, p->current_coords.y + 30);
+        glVertex2f(p->current_coords.x + 15, p->current_coords.y - 15);
+        glVertex2f(p->current_coords.x - 15, p->current_coords.y - 15);
+        glVertex2f(p->current_coords.x, p->current_coords.y + 15);
         glEnd();
     }
     else
