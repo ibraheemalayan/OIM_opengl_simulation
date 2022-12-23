@@ -1,2 +1,0 @@
-peopleUntil8am 10 15
-peopleAfter8amUntil1pm 10 15
