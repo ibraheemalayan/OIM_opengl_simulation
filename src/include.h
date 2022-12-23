@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <math.h>
 #include <unistd.h>
 #include <string.h>
 #include <limits.h>
@@ -29,7 +30,6 @@
 #define FPS 120
 
 #define UISIG 7
-
 
 // TODO
 struct message
