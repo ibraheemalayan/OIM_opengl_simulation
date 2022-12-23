@@ -12,7 +12,7 @@
 struct personInformation {
         pid_t   personID;       //Process ip
         char    gender;         //F,M
-        int     officialDocumentNeeded; // "1"birth certificates, "2"travel documents, "3"family reunion documents, "4"ID-related problems
+        int     officialDocumentNeeded; // "0"birth certificates, "1"travel documents, "2"family reunion documents, "3"ID-related problems
         int     timerForPatience;
 };
 
