@@ -1,8 +1,5 @@
 #include "local.h"
-
-
 //..........Fuctions........................
-
 void readInputFile();
 int randomIintegerInRange(int lower,int upper);
 void creatPeople();
@@ -22,7 +19,6 @@ struct personInformation dequeueNodeFromBirthCertificatesTellerQueue();
 struct personInformation dequeueNodeFromTravelDocumentsTellerQueue();
 struct personInformation dequeueNodeFromFamilyReunionDocumentsTellerQueue();
 struct personInformation dequeueNodeFromIDRelatedProblemsTellerQueue();
-
 
 //Enqueue To Queues ->
 void enqueueToAccessQueues(pid_t personID, char gender, int officialDocumentNeeded, float timerForPatience);
