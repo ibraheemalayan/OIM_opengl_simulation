@@ -1,13 +1,21 @@
 {
+    "env": {
+        "DISPLAY": ":0"
+    },
     "configurations": [
         {
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/src/ui",
-                "${workspaceFolder}/src/cli"
+                "${workspaceFolder}/src/ui"
             ],
             "defines": [],
+            "compilerArgs": [
+                "-lm",
+                "-lGL",
+                "-lGLU",
+                "-lglut"
+            ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",
             "cppStandard": "gnu++17",

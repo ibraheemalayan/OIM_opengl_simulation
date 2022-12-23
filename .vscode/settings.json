@@ -3,6 +3,7 @@
         "include.h": "c",
         "types.h": "c",
         "ui_helper.h": "c",
-        "constants.h": "c"
+        "constants.h": "c",
+        "glut.h": "c"
     }
 }
