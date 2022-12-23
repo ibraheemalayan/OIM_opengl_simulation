@@ -5,33 +5,46 @@
 
 void readInputFile();
 int randomIintegerInRange(int lower,int upper);
-
-void enqueueToAccessQueues(pid_t personID, char gender, int officialDocumentNeeded, float timerForPatience);
-struct personInformation dequeueNodeFromMalesAccessQueue();
-struct personInformation dequeueNodeFromFemalesAccessQueue();
-
-void enqueueToRollingGateQueueFemales();
-void enqueueToRollingGateQueueMales();
-struct personInformation dequeueNodeFromRollingGateQueueMales();
-struct personInformation dequeueNodeFromRollingGateQueueFemales();
-
-
 void creatPeople();
 void displyAccessQueues();
 void displyRollingGatesQueues();
-
 void printInfoForArrivalPerson(pid_t personID, char gender, int officialDocumentNeeded);
 void simulation();
+void displyGroupingAreaQueue();
 
+//Dequeue from Queues ->
+struct personInformation dequeueNodeFromMalesAccessQueue();
+struct personInformation dequeueNodeFromFemalesAccessQueue();
+struct personInformation dequeueNodeFromRollingGateQueueMales();
+struct personInformation dequeueNodeFromRollingGateQueueFemales();
+struct personInformation dequeueNodeFromGroupingAreaQueue();
+struct personInformation dequeueNodeFromBirthCertificatesTellerQueue();
+struct personInformation dequeueNodeFromTravelDocumentsTellerQueue();
+struct personInformation dequeueNodeFromFamilyReunionDocumentsTellerQueue();
+struct personInformation dequeueNodeFromIDRelatedProblemsTellerQueue();
+
+
+//Enqueue To Queues ->
+void enqueueToAccessQueues(pid_t personID, char gender, int officialDocumentNeeded, float timerForPatience);
+void enqueueToRollingGateQueueFemales();
+void enqueueToRollingGateQueueMales();
+void enqueueToGroupingAreaQueue(struct personInformation personInf);
+void enqueueToBirthCertificatesTelleQueue(struct personInformation personInf);
+void enqueueToTravelDocumentsTelleQueue(struct personInformation personInf);
+void enqueueToFamilyReunionDocumentsTelleQueue(struct personInformation personInf);
+void enqueueToIDRelatedProblemsTelleQueue(struct personInformation personInf);
+
+
+//Threads
 void insertToMalesRollingGateQueue();
 void insertToFemalesRollingGateQueue();
-
 void insertToFemalesMetalDetector();
 void insertToMalesMetalDetector();
-
-void enqueueToGroupingAreaQueue(struct personInformation personInf);
-
-void displyGroupingAreaQueue();
+void insertToTellersQueues();
+void insertToBirthCertificatesTeller();
+void insertToTravelDocumentsTeller();
+void insertToFamilyReunionDocumentsTeller();
+void insertToIDRelatedProblemsTeller();
 
 
 //..........Gloable Variables................
@@ -66,6 +79,27 @@ struct accessQueueNode * FrontForGroupingAreaQueue = NULL;
 struct accessQueueNode * RearForGroupingAreaQueue = NULL;
 
 
+//Pointers to the birth certificates teller
+struct accessQueueNode * FrontForBirthCertificatesTellerQueue = NULL;
+struct accessQueueNode * RearForBirthCertificatesTellerQueue = NULL;
+
+
+//Pointers to the travel documents teller
+struct accessQueueNode * FrontForTravelDocumentsTellerQueue = NULL;
+struct accessQueueNode * RearForTravelDocumentsTellerQueue = NULL;
+
+
+
+//Pointers to the family reunion documents teller
+struct accessQueueNode * FrontForFamilyReunionDocumentsTellerQueue = NULL;
+struct accessQueueNode * RearForFamilyReunionDocumentsTellerQueue = NULL;
+
+
+//Pointers to the ID-related problems  teller
+struct accessQueueNode * FrontForIDRelatedProblemsTellerQueue = NULL;
+struct accessQueueNode * RearForIDRelatedProblemsTellerQueue = NULL;
+
+
 
 //Threshold
 #define g_threshold 3
@@ -86,8 +120,24 @@ int g_numberOfMaelsInTheRollingGateQueue=0;
 //Number of people in the grouping area
 int g_numberOfpeopleInGroupingArea =0;
 
+//Number of people in the Birth Certificates Teller Queue
+int g_numberOfpeopleInBirthCertificatesTellerQueue =0;
+
+//Number of people in the Travel Documents Teller Queue
+int g_numberOfpeopleInTravelDocumentsTellerQueue =0;
+
+//Number of people in the Family Reunion Documents Teller Queue
+int g_numberOfpeopleInFamilyReunionDocumentsTellerQueue =0;
+
+//Number of people in the ID Related Problems Teller Queue
+int g_numberOfpeopleInIDRelatedProblemsTellerQueue =0;
+
+
 //Array of Official Document
 char g_OfficialDocument[4][40] ={"Birth Certificates","Travel Documents","Family Reunion Documents","ID-related Problems"};
+
+//Array for status when leaving OIM either satisfied or unhappy
+char g_leaving_OIM_Status[2][15]={"Satisfied","Unhappy"};
 
 int main()
 {
@@ -145,6 +195,30 @@ void simulation(){
         pthread_create(&p_thread4, NULL, insertToFemalesMetalDetector,  NULL);
 
 
+        /* create a new thread that will keep move nodes from  Grouping area queue to tellers Queues*/
+        pthread_t p_thread5;
+        pthread_create(&p_thread5, NULL, insertToTellersQueues,  NULL);
+
+
+        /* create a new thread that will keep move nodes from  Birth Certificates Teller Queue to the Birth Certificates Teller*/
+        pthread_t p_thread6;
+        pthread_create(&p_thread6, NULL, insertToBirthCertificatesTeller,  NULL);
+
+
+        /* create a new thread that will keep move nodes from  Travel Documents Teller Queue to the Travel Documents Teller*/
+        pthread_t p_thread7;
+        pthread_create(&p_thread7, NULL, insertToTravelDocumentsTeller,  NULL);
+
+
+        /* create a new thread that will keep move nodes from  Family Reunion Documents Teller Queue to the Family Reunion Documents Teller*/
+        pthread_t p_thread8;
+        pthread_create(&p_thread8, NULL, insertToFamilyReunionDocumentsTeller,  NULL);
+
+
+        /* create a new thread that will keep move nodes from  ID Related Problems Teller Queue to the ID Related Problems Teller*/
+        pthread_t p_thread9;
+        pthread_create(&p_thread9, NULL, insertToIDRelatedProblemsTeller,  NULL);
+
 
         //enqueueToRollingGateQueueFemales();
         //enqueueToRollingGateQueueFemales();
@@ -168,6 +242,12 @@ void simulation(){
         pthread_join(p_thread2, NULL);
         pthread_join(p_thread3, NULL);
         pthread_join(p_thread4, NULL);
+        pthread_join(p_thread5, NULL);
+        pthread_join(p_thread6, NULL);
+        pthread_join(p_thread7, NULL);
+        pthread_join(p_thread8, NULL);
+        pthread_join(p_thread9, NULL);
+
 }
 
 void readInputFile(){
@@ -301,6 +381,122 @@ void enqueueToGroupingAreaQueue(struct personInformation personInf){
 
 }
 
+void enqueueToBirthCertificatesTelleQueue(struct personInformation personInf){
+        printf("\n\nenqueueToBirthCertificatesTelleQueue\n\n");
+        fflush(stdout);
+        struct personInformation person = personInf;
+
+        struct accessQueueNode * ptr = (struct accessQueueNode * ) malloc(sizeof(struct accessQueueNode));
+        if (ptr == NULL) {
+        printf("\nOVERFLOW enqueueToBirthCertificatesTelleQueue\n");
+        return;
+        } else {
+                ptr->personInfo=person;
+                if (FrontForBirthCertificatesTellerQueue == NULL) {
+                FrontForBirthCertificatesTellerQueue = ptr;
+                RearForBirthCertificatesTellerQueue = ptr;
+                FrontForBirthCertificatesTellerQueue->nextPesron = NULL;
+                RearForBirthCertificatesTellerQueue->nextPesron = NULL;
+                } else {
+                RearForBirthCertificatesTellerQueue->nextPesron = ptr;
+                RearForBirthCertificatesTellerQueue = ptr;
+                RearForBirthCertificatesTellerQueue->nextPesron = NULL;
+                }
+                sleep(randomIintegerInRange(3,6));//simulation for time delaying
+                g_numberOfpeopleInBirthCertificatesTellerQueue++;
+                printf("\n\nPerson %d Enter Birth Certificates Teller Queue, Gender %c,Official Document Needed is %s\n\n",person.personID,person.gender,g_OfficialDocument[person.officialDocumentNeeded]);
+                fflush(stdout);
+
+          }
+
+}
+
+void enqueueToTravelDocumentsTelleQueue(struct personInformation personInf){
+        struct personInformation person = personInf;
+
+        struct accessQueueNode * ptr = (struct accessQueueNode * ) malloc(sizeof(struct accessQueueNode));
+        if (ptr == NULL) {
+        printf("\nOVERFLOW enqueueToTravelDocumentsTelleQueue\n");
+        return;
+        } else {
+                ptr->personInfo=person;
+                if (FrontForTravelDocumentsTellerQueue == NULL) {
+                FrontForTravelDocumentsTellerQueue = ptr;
+                RearForTravelDocumentsTellerQueue = ptr;
+                FrontForTravelDocumentsTellerQueue->nextPesron = NULL;
+                RearForTravelDocumentsTellerQueue->nextPesron = NULL;
+                } else {
+                RearForTravelDocumentsTellerQueue->nextPesron = ptr;
+                RearForTravelDocumentsTellerQueue = ptr;
+                RearForTravelDocumentsTellerQueue->nextPesron = NULL;
+                }
+                sleep(randomIintegerInRange(3,6));//simulation for time delaying
+                g_numberOfpeopleInTravelDocumentsTellerQueue++;
+                printf("\n\nPerson %d Enter Travel Documents Teller Queue, Gender %c,Official Document Needed is %s\n\n",person.personID,person.gender,g_OfficialDocument[person.officialDocumentNeeded]);
+                fflush(stdout);
+
+          }
+
+}
+
+void enqueueToFamilyReunionDocumentsTelleQueue(struct personInformation personInf){
+        struct personInformation person = personInf;
+
+        struct accessQueueNode * ptr = (struct accessQueueNode * ) malloc(sizeof(struct accessQueueNode));
+        if (ptr == NULL) {
+        printf("\nOVERFLOW enqueueToFamilyReunionDocumentsTelleQueue\n");
+        return;
+        } else {
+                ptr->personInfo=person;
+                if (FrontForFamilyReunionDocumentsTellerQueue    == NULL) {
+                FrontForFamilyReunionDocumentsTellerQueue = ptr;
+                RearForFamilyReunionDocumentsTellerQueue = ptr;
+                FrontForFamilyReunionDocumentsTellerQueue->nextPesron = NULL;
+                RearForFamilyReunionDocumentsTellerQueue->nextPesron = NULL;
+                } else {
+                RearForFamilyReunionDocumentsTellerQueue->nextPesron = ptr;
+                RearForFamilyReunionDocumentsTellerQueue = ptr;
+                RearForFamilyReunionDocumentsTellerQueue->nextPesron = NULL;
+                }
+                sleep(randomIintegerInRange(3,6));//simulation for time delaying
+                g_numberOfpeopleInFamilyReunionDocumentsTellerQueue++;
+                printf("\n\nPerson %d Enter Family Reunion Documents Teller Queue, Gender %c,Official Document Needed is %s\n\n",person.personID,person.gender,g_OfficialDocument[person.officialDocumentNeeded]);
+                fflush(stdout);
+
+          }
+
+}
+
+void enqueueToIDRelatedProblemsTelleQueue(struct personInformation personInf){
+        struct personInformation person = personInf;
+
+        struct accessQueueNode * ptr = (struct accessQueueNode * ) malloc(sizeof(struct accessQueueNode));
+        if (ptr == NULL) {
+        printf("\nOVERFLOW enqueueToIDRelatedProblemsTelleQueue\n");
+        return;
+        } else {
+                ptr->personInfo=person;
+                if (FrontForIDRelatedProblemsTellerQueue == NULL) {
+                FrontForIDRelatedProblemsTellerQueue = ptr;
+                RearForIDRelatedProblemsTellerQueue = ptr;
+                FrontForIDRelatedProblemsTellerQueue->nextPesron = NULL;
+                RearForIDRelatedProblemsTellerQueue->nextPesron = NULL;
+                } else {
+                RearForIDRelatedProblemsTellerQueue->nextPesron = ptr;
+                RearForIDRelatedProblemsTellerQueue = ptr;
+                RearForIDRelatedProblemsTellerQueue->nextPesron = NULL;
+                }
+                sleep(randomIintegerInRange(3,6));//simulation for time delaying
+                g_numberOfpeopleInIDRelatedProblemsTellerQueue++;
+                printf("\n\nPerson %d Enter ID Related Problems Teller Queue, Gender %c,Official Document Needed is %s\n\n",person.personID,person.gender,g_OfficialDocument[person.officialDocumentNeeded]);
+                fflush(stdout);
+
+          }
+
+}
+
+
+
 
 void enqueueToAccessQueues(pid_t personID, char gender, int officialDocumentNeeded, float timerForPatience) {
 
@@ -383,6 +579,88 @@ struct personInformation dequeueNodeFromFemalesAccessQueue() {
     }
     return person;
 }
+
+struct personInformation dequeueNodeFromGroupingAreaQueue() {
+    struct accessQueueNode * temp =NULL;
+    struct personInformation person ={0};
+    if (FrontForGroupingAreaQueue  == NULL) {
+        printf("Underflow dequeueNodeFromGroupingAreaQueue\n");
+        return;
+    } else {
+        temp = FrontForGroupingAreaQueue;
+        person = temp->personInfo;
+        FrontForGroupingAreaQueue = FrontForGroupingAreaQueue->nextPesron;
+        g_numberOfpeopleInGroupingArea--;
+        free(temp);
+    }
+    return person;
+}
+
+struct personInformation dequeueNodeFromBirthCertificatesTellerQueue() {
+    struct accessQueueNode * temp =NULL;
+    struct personInformation person ={0};
+    if (FrontForBirthCertificatesTellerQueue   == NULL) {
+        printf("Underflow dequeueNodeFromBirthCertificatesTellerQueue\n");
+        return;
+    } else {
+        temp = FrontForBirthCertificatesTellerQueue;
+        person = temp->personInfo;
+        FrontForBirthCertificatesTellerQueue = FrontForBirthCertificatesTellerQueue->nextPesron;
+        g_numberOfpeopleInBirthCertificatesTellerQueue--;
+        free(temp);
+    }
+    return person;
+}
+
+struct personInformation dequeueNodeFromTravelDocumentsTellerQueue() {
+    struct accessQueueNode * temp =NULL;
+    struct personInformation person ={0};
+    if (FrontForTravelDocumentsTellerQueue == NULL) {
+        printf("Underflow dequeueNodeFromTravelDocumentsTellerQueue\n");
+        return;
+    } else {
+        temp = FrontForTravelDocumentsTellerQueue ;
+        person = temp->personInfo;
+        FrontForTravelDocumentsTellerQueue  = FrontForTravelDocumentsTellerQueue->nextPesron;
+        g_numberOfpeopleInTravelDocumentsTellerQueue--;
+        free(temp);
+    }
+    return person;
+}
+
+struct personInformation dequeueNodeFromFamilyReunionDocumentsTellerQueue() {
+    struct accessQueueNode * temp =NULL;
+    struct personInformation person ={0};
+    if (FrontForFamilyReunionDocumentsTellerQueue == NULL) {
+        printf("Underflow dequeueNodeFromFamilyReunionDocumentsTellerQueue\n");
+        return;
+    } else {
+        temp = FrontForFamilyReunionDocumentsTellerQueue;
+        person = temp->personInfo;
+        FrontForFamilyReunionDocumentsTellerQueue   = FrontForFamilyReunionDocumentsTellerQueue->nextPesron;
+        g_numberOfpeopleInFamilyReunionDocumentsTellerQueue--;
+        free(temp);
+    }
+    return person;
+}
+
+
+struct personInformation dequeueNodeFromIDRelatedProblemsTellerQueue() {
+    struct accessQueueNode * temp =NULL;
+    struct personInformation person ={0};
+    if (FrontForIDRelatedProblemsTellerQueue == NULL) {
+        printf("Underflow dequeueNodeFromIDRelatedProblemsTellerQueue\n");
+        return;
+    } else {
+        temp = FrontForIDRelatedProblemsTellerQueue;
+        person = temp->personInfo;
+        FrontForIDRelatedProblemsTellerQueue  = FrontForIDRelatedProblemsTellerQueue->nextPesron;
+        g_numberOfpeopleInIDRelatedProblemsTellerQueue--;
+        free(temp);
+    }
+    return person;
+}
+
 
 struct personInformation dequeueNodeFromRollingGateQueueFemales() {
     struct accessQueueNode * temp =NULL;
@@ -524,7 +802,7 @@ void creatPeople(){
                             int officialDocumentNeeded  = randomIintegerInRange(0,3);
                             printInfoForArrivalPerson(pid,gender,officialDocumentNeeded);
                             sleep(randomIintegerInRange(3,6));//simulation for time delaying
-                            enqueueToAccessQueues(pid,gender,officialDocumentNeeded,randomIintegerInRange(1,4));
+                            enqueueToAccessQueues(pid,gender,officialDocumentNeeded,randomIintegerInRange(20,30));
                 }
                 else
                         exit(-1);//pause();
@@ -604,8 +882,114 @@ void insertToFemalesMetalDetector(){
 }
 
 
-void printInfoForArrivalPerson(pid_t personID, char gender, int officialDocumentNeeded){
+void insertToTellersQueues(){
 
+  struct personInformation Person;
+  while(1){
+        if(g_numberOfpeopleInGroupingArea > 0){
+                sleep(randomIintegerInRange(3,6));//simulation for delay
+                Person = dequeueNodeFromGroupingAreaQueue();
+                printf("\n\nPerson %d leave the Grouping Area Queue, Gernder %c, Official Document Needed is %s\n\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded]);
+                fflush(stdout);
+                sleep(randomIintegerInRange(4,7));//simulation for delaying while moving to Tellers Queuesas sleep between 5 to 8 seconds
+                if (Person.officialDocumentNeeded == 0)
+                        enqueueToBirthCertificatesTelleQueue(Person);
+                else if (Person.officialDocumentNeeded == 1)
+                        enqueueToTravelDocumentsTelleQueue(Person);
+                else if (Person.officialDocumentNeeded == 2)
+                        enqueueToFamilyReunionDocumentsTelleQueue(Person);
+                else if (Person.officialDocumentNeeded == 3)
+                        enqueueToIDRelatedProblemsTelleQueue(Person);
+
+        }
+
+  }
+
+}
+
+void insertToBirthCertificatesTeller(){
+
+  struct personInformation Person ;
+  int leaving_OIM_Status; // 0:Satisfied ,  1:Unhappy
+  while(1){
+        if(g_numberOfpeopleInBirthCertificatesTellerQueue  > 0){
+                //sleep(randomIintegerInRange(3,6));//simulation for delay
+                Person = dequeueNodeFromBirthCertificatesTellerQueue();
+                printf("\n\nPerson %d achieve the Birth Certificates Teller, Gernder %c, Official Document Needed is %s\n\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded]);
+                fflush(stdout);
+                sleep(randomIintegerInRange(10,15));//simulation for delay in the Birth Certificates Teller as sleep between 10 to 15 seconds
+                leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
+                printf("Person %d leave the Birth Certificates Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
+                fflush(stdout);
+        }
+
+  }
+
+
+
+}
+void insertToTravelDocumentsTeller(){
+
+  struct personInformation Person ;
+  int leaving_OIM_Status; // 0:Satisfied ,  1:Unhappy
+  while(1){
+        if(g_numberOfpeopleInTravelDocumentsTellerQueue  > 0){
+                //sleep(randomIintegerInRange(3,6));//simulation for delay
+                Person = dequeueNodeFromTravelDocumentsTellerQueue();
+                printf("\n\nPerson %d achieve the Travel Documents Teller, Gernder %c, Official Document Needed is %s\n\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded]);
+                fflush(stdout);
+                sleep(randomIintegerInRange(10,15));//simulation for delay in the Travel Documents Teller as sleep between 10 to 15 seconds
+                leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
+                printf("Person %d leave the Travel Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
+                fflush(stdout);
+        }
+
+  }
+
+}
+void insertToFamilyReunionDocumentsTeller(){
+
+  struct personInformation Person ;
+  int leaving_OIM_Status; // 0:Satisfied ,  1:Unhappy
+  while(1){
+        if(g_numberOfpeopleInFamilyReunionDocumentsTellerQueue   > 0){
+                //sleep(randomIintegerInRange(3,6));//simulation for delay
+                Person = dequeueNodeFromTravelDocumentsTellerQueue();
+                printf("\n\nPerson %d achieve the Family Reunion Documents Teller, Gernder %c, Official Document Needed is %s\n\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded]);
+                fflush(stdout);
+                sleep(randomIintegerInRange(10,15));//simulation for delay in the Family Reunion Documents Teller as sleep between 10 to 15 seconds
+                leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
+                printf("Person %d leave the Family Reunion Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
+                fflush(stdout);
+        }
+
+  }
+
+}
+void insertToIDRelatedProblemsTeller(){
+
+  struct personInformation Person ;
+  int leaving_OIM_Status; // 0:Satisfied ,  1:Unhappy
+  while(1){
+        if(g_numberOfpeopleInIDRelatedProblemsTellerQueue   > 0){
+                //sleep(randomIintegerInRange(3,6));//simulation for delay
+                Person = dequeueNodeFromIDRelatedProblemsTellerQueue();
+                printf("\n\nPerson %d achieve the ID Related Problems Teller, Gernder %c, Official Document Needed is %s\n\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded]);
+                fflush(stdout);
+                sleep(randomIintegerInRange(10,15));//simulation for delay in the ID Related Problems Teller as sleep between 10 to 15 seconds
+                leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
+                printf("Person %d leave the ID Related Problems Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
+                fflush(stdout);
+        }
+
+  }
+
+}
+
+
+
+void printInfoForArrivalPerson(pid_t personID, char gender, int officialDocumentNeeded){
         printf("\n\nPerson %d arrived, Gernder %c, Official Document Needed is %s\n\n",personID, gender,g_OfficialDocument[officialDocumentNeeded]);
         fflush(stdout);
 }
+
