@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "include.h": "c"
+        "include.h": "c",
+        "types.h": "c",
+        "ui_helper.h": "c",
+        "constants.h": "c"
     }
 }

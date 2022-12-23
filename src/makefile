@@ -10,7 +10,7 @@ PWD := $(shell pwd)
 # Standalone GUI
 compile_gui:
 	@echo "Compiling..."
-	gcc ui/standalone_ui.c -lGL -lGLU -lglut -lm -o bin/standalone_gui
+	gcc ui/ui.c -lGL -lGLU -lglut -lm -o bin/standalone_gui
 
 
 run_gui: compile_gui;
@@ -21,7 +21,7 @@ run_gui: compile_gui;
 # Debug Standalone GUI
 compile_gui_debug:
 	@echo "Compiling..."
-	gcc ui/standalone_ui.c -g -lGL -lGLU -lglut -lm -o bin/standalone_gui
+	gcc ui/ui.c -g -lGL -lGLU -lglut -lm -o bin/standalone_gui
 
 
 debug_gui: compile_gui_debug;
