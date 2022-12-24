@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := run
+.DEFAULT_GOAL := run_cli
 
 # use the rest as arguments for "run"
 RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
@@ -29,16 +29,16 @@ debug_gui: compile_gui_debug;
 	$(shell export DISPLAY=:0)
 	gdb ./bin/standalone_gui.o
 
-# StandAlone CLI
-# compile_cli:
-# 	@echo "Compiling..."
-# 	gcc cli/standalone_parent.c -lm -o bin/standalone_parent.o
-# 	gcc cli/standalone_child.c -lm -o bin/standalone_child.o
+#	StandAlone CLI
+compile_cli:
+	@echo "Compiling..."
+	gcc -pthread cli/main.c -o bin/main.o
+#	gcc cli/standalone_child.c -lm -o bin/standalone_child.o
 
 
-# run_cli: compile_cli;
-# 	@echo "Running CLI..."
-# 	./bin/standalone_parent.o $(RUN_ARGS)
+run_cli: compile_cli;
+	@echo "Running CLI..."
+	./bin/main.o $(RUN_ARGS)
 
 # # Debug StandAlone CLI
 # debug_compile_cli:
