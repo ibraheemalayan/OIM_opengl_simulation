@@ -98,11 +98,26 @@ set follow-exec-mode new
 * [X] add contributors names/ids
 * [ ] add a demo GIF in this README
 
-#### Backend
+#### Backend ibraheem
 
 * [ ] create the message queues ( and delete on exit )
 * [ ] message struct & message types
 * [ ] configs file and its loading function (.env maybe)
+
+
+#### Backend mohammad : written in [3:17PM 12/24/2022]
+* [ ] add mutix on all queues
+* [ ] add ticket number to person struct
+* [ ] add index to person struct, refers to person location in the host queue
+* [ ] decrement the time patience of the person
+* [ ] every person should be sensitive to a signal from threads to update his location in the host queue
+* [ ] every person should be sensitive to a signal from threads to change his location from queue to another queue
+* [ ] every person should be sensitive to a signal from parent to terminate
+* [ ] Dynamic number of tallers -> Arrays of Pointers
+* [ ] 1- message queue between the parnte and his childrens
+* [ ] 2- by this message queue, chaild tell the parent that his time patience ended 
+* [ ] 3- parent send signal to process to terminate
+* [ ] 4- parent send to ui the information of terminated process by messsage queue 
 
 #### UI
 
