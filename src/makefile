@@ -16,7 +16,7 @@ compile_gui:
 run_gui: compile_gui;
 	@echo "Running GUI..."
 	$(shell export DISPLAY=:0)
-	./bin/standalone_gui
+	./bin/standalone_gui.o
 
 # Debug Standalone GUI
 compile_gui_debug:
