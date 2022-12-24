@@ -1,7 +1,7 @@
 .DS_Store
 
 src/.idea
-src/bin
+src/bin/*.o
 
 # Prerequisites
 *.d
