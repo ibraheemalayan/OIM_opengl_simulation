@@ -14,6 +14,8 @@ struct personInformation {
         char    gender;         //F,M
         int     officialDocumentNeeded; // "0"birth certificates, "1"travel documents, "2"family reunion documents, "3"ID-related problems
         int     timerForPatience;
+        int     indexLocationInTheHostQueue;
+        int     tiketNumberInGroupingArea;   
 };
 
 
