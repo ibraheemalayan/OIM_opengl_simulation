@@ -106,7 +106,7 @@ set follow-exec-mode new
 
 
 #### Backend mohammad : written in [3:17PM 12/24/2022]
-* [ ] add mutix on all queues
+* [X] add mutix on all queues
 * [ ] add ticket number to person struct
 * [ ] add index to person struct, refers to person location in the host queue
 * [ ] decrement the time patience of the person
