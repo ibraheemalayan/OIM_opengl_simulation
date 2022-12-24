@@ -5,12 +5,19 @@
 
 void readInputFile();
 int randomIintegerInRange(int lower,int upper);
-void creatPeople();
 void displyAccessQueues();
 void displyRollingGatesQueues();
 void printInfoForArrivalPerson(struct personInformation person);
 void simulation();
 void displyGroupingAreaQueue();
+
+//People creation 
+void creatPeople();
+void childSensitiveSignals();
+void signalCatcher_movingTimeForchangeIndexLocationForPersonInTheHostQueue(int the_sig);
+void signalCatcher_movingTimeForchangeLocationForPersonFromQueueToAnotherQueue(int the_sig);
+
+
 
 //Dequeue from Queues -> 
 struct personInformation dequeueNodeFromMalesAccessQueue();
@@ -23,6 +30,7 @@ struct personInformation dequeueNodeFromTravelDocumentsTellerQueue();
 struct personInformation dequeueNodeFromFamilyReunionDocumentsTellerQueue();
 struct personInformation dequeueNodeFromIDRelatedProblemsTellerQueue();
 
+void updateIndexOfQueue(struct accessQueueNode * FrontOfQueue);
 
 //Enqueue To Queues ->
 void enqueueToAccessQueues(struct personInformation person);
@@ -45,6 +53,8 @@ void insertToBirthCertificatesTeller();
 void insertToTravelDocumentsTeller();
 void insertToFamilyReunionDocumentsTeller();
 void insertToIDRelatedProblemsTeller();
+
+
 
 
 //..........Gloable Variables................
@@ -108,6 +118,14 @@ struct accessQueueNode * RearForIDRelatedProblemsTellerQueue = NULL;
 int minShiftingInArrivalTime = 1;
 int maxShiftingInArrivalTime = 3;
 
+//Time for moving person insude the Queue in seconds
+int minTimeForMovingPersonInsideHostQueue = 3;
+int maxTimeForMovingPersonInsideHostQueue = 6;
+
+//Time for moving person From Queue To Another Queue in seconds
+int minTimeForMovingPersonFromQueueToAnotherQueue = 6;
+int maxTimeForMovingPersonFromQueueToAnotherQueue = 9;
+
 //Number of Females and males in the Access queues
 int g_numberOfMalesInAccessQueue = 0;
 int g_numberOfFemalesInAccessQueue = 0;
@@ -158,7 +176,7 @@ int main()
 
 void simulation(){
 
-	printf("\n\n.......4:30 AM: People Start coming.......\n\n");
+	printf("\n\n\n\n.......4:30 AM: People Start coming.......\n\n");
         fflush(stdout);
         
 	//Read input file
@@ -190,45 +208,45 @@ void simulation(){
 	
 	/* create a new thread that will keep move nodes from males access queue to Rolling Gate Queue "Males" */
   	pthread_t p_thread1;
-	pthread_create(&p_thread1, NULL, insertToMalesRollingGateQueue, NULL);
+	pthread_create(&p_thread1, NULL,  (void *)insertToMalesRollingGateQueue, NULL);
   	
 
 	/* create a new thread that will keep move nodes from Females access queue to Rolling Gate Queue "Females" */
         pthread_t p_thread2;
-        pthread_create(&p_thread2, NULL, insertToFemalesRollingGateQueue, NULL);
+        pthread_create(&p_thread2, NULL,  (void *)insertToFemalesRollingGateQueue, NULL);
 
 	/* create a new thread that will keep move nodes from Males rolling gate queue to the Males metal detector*/
 	pthread_t p_thread3;
-	pthread_create(&p_thread3, NULL, insertToMalesMetalDetector, NULL);
+	pthread_create(&p_thread3, NULL,  (void *)insertToMalesMetalDetector, NULL);
 
 	/* create a new thread that will keep move nodes from  Females rolling gate queue to the  Females metal detector*/
         pthread_t p_thread4;
-        pthread_create(&p_thread4, NULL, insertToFemalesMetalDetector,  NULL);
+        pthread_create(&p_thread4, NULL,  (void *)insertToFemalesMetalDetector,  NULL);
 
 
 	/* create a new thread that will keep move nodes from  Grouping area queue to tellers Queues*/
         pthread_t p_thread5;
-        pthread_create(&p_thread5, NULL, insertToTellersQueues,  NULL);
+        pthread_create(&p_thread5, NULL,  (void *)insertToTellersQueues,  NULL);
 
 
 	/* create a new thread that will keep move nodes from  Birth Certificates Teller Queue to the Birth Certificates Teller*/
         pthread_t p_thread6;
-        pthread_create(&p_thread6, NULL, insertToBirthCertificatesTeller,  NULL);
+        pthread_create(&p_thread6, NULL,  (void *)insertToBirthCertificatesTeller,  NULL);
 	
 
 	/* create a new thread that will keep move nodes from  Travel Documents Teller Queue to the Travel Documents Teller*/
         pthread_t p_thread7;
-        pthread_create(&p_thread7, NULL, insertToTravelDocumentsTeller,  NULL);
+        pthread_create(&p_thread7, NULL,  (void *)insertToTravelDocumentsTeller,  NULL);
 
 
 	/* create a new thread that will keep move nodes from  Family Reunion Documents Teller Queue to the Family Reunion Documents Teller*/
         pthread_t p_thread8;
-        pthread_create(&p_thread8, NULL, insertToFamilyReunionDocumentsTeller,  NULL);
+        pthread_create(&p_thread8, NULL,  (void *)insertToFamilyReunionDocumentsTeller,  NULL);
 
 
 	/* create a new thread that will keep move nodes from  ID Related Problems Teller Queue to the ID Related Problems Teller*/
         pthread_t p_thread9;
-        pthread_create(&p_thread9, NULL, insertToIDRelatedProblemsTeller,  NULL);
+        pthread_create(&p_thread9, NULL,  (void *)insertToIDRelatedProblemsTeller,  NULL);
 
 
 	//enqueueToRollingGateQueueFemales();
@@ -314,7 +332,8 @@ void enqueueToRollingGateQueueMales(){
             printf("\nOVERFLOW\n");
             return;
         } else {
-		
+                person.indexLocationInTheHostQueue=g_numberOfMaelsInTheRollingGateQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
 		        //printf("Person %d Enter Males Rolling Gate Queue, Official Document Needed is \n", ptr->personInfo.personID);
 		        fflush(stdout);
@@ -345,6 +364,8 @@ void enqueueToRollingGateQueueFemales(){
         printf("\nOVERFLOW\n");
         return;
         } else {
+                person.indexLocationInTheHostQueue=g_numberOfFemaelsInTheRollingGateQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontRollingGateQueueFemales == NULL) {
                     FrontRollingGateQueueFemales = ptr;
@@ -374,6 +395,8 @@ void enqueueToGroupingAreaQueue(struct personInformation personInf){
             printf("\nOVERFLOW\n");
             return;
         } else {
+                person.indexLocationInTheHostQueue=g_numberOfpeopleInGroupingArea;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForGroupingAreaQueue == NULL) {
                     FrontForGroupingAreaQueue = ptr;
@@ -405,6 +428,8 @@ void enqueueToBirthCertificatesTelleQueue(struct personInformation personInf){
             printf("\nOVERFLOW enqueueToBirthCertificatesTelleQueue\n");
             return;
         } else {
+                person.indexLocationInTheHostQueue=g_numberOfpeopleInBirthCertificatesTellerQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForBirthCertificatesTellerQueue == NULL) {
                     FrontForBirthCertificatesTellerQueue = ptr;
@@ -434,6 +459,8 @@ void enqueueToTravelDocumentsTelleQueue(struct personInformation personInf){
             printf("\nOVERFLOW enqueueToTravelDocumentsTelleQueue\n");
             return;
         } else {
+                person.indexLocationInTheHostQueue=g_numberOfpeopleInTravelDocumentsTellerQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForTravelDocumentsTellerQueue == NULL) {
                     FrontForTravelDocumentsTellerQueue = ptr;
@@ -463,6 +490,8 @@ void enqueueToFamilyReunionDocumentsTelleQueue(struct personInformation personIn
             printf("\nOVERFLOW enqueueToFamilyReunionDocumentsTelleQueue\n");
             return;
         } else {
+                person.indexLocationInTheHostQueue=g_numberOfpeopleInFamilyReunionDocumentsTellerQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForFamilyReunionDocumentsTellerQueue    == NULL) {
                     FrontForFamilyReunionDocumentsTellerQueue = ptr;
@@ -492,6 +521,8 @@ void enqueueToIDRelatedProblemsTelleQueue(struct personInformation personInf){
             printf("\nOVERFLOW enqueueToIDRelatedProblemsTelleQueue\n");
             return;
         } else {
+                person.indexLocationInTheHostQueue=g_numberOfpeopleInIDRelatedProblemsTellerQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForIDRelatedProblemsTellerQueue == NULL) {
                     FrontForIDRelatedProblemsTellerQueue = ptr;
@@ -526,6 +557,8 @@ void enqueueToAccessQueues(struct personInformation person) {
 
 	if (person.gender == 'M'){
             pthread_mutex_lock(&malesAccessQueue_mutex);
+            person.indexLocationInTheHostQueue=g_numberOfMalesInAccessQueue;//update Index
+            kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
 	        ptr->personInfo = person;
 		    if (FrontAccessQueueMales == NULL) {
             	FrontAccessQueueMales = ptr;
@@ -542,6 +575,8 @@ void enqueueToAccessQueues(struct personInformation person) {
 
 	} else {
             pthread_mutex_lock(&femalesAccessQueue_mutex);
+            person.indexLocationInTheHostQueue=g_numberOfFemalesInAccessQueue;//update Index
+            kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
 		    ptr->personInfo = person;
             if (FrontAccessQueueFemales == NULL) {
             FrontAccessQueueFemales = ptr;
@@ -568,12 +603,15 @@ struct personInformation dequeueNodeFromMalesAccessQueue() {
     pthread_mutex_lock(&malesAccessQueue_mutex );
     struct accessQueueNode * temp =NULL; 	
     struct personInformation person= {0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontAccessQueueMales == NULL) {
         printf("Underflow dequeueNodeFromMalesAccessQueue\n");
-        return;
+        return person;
     } else {
         temp = FrontAccessQueueMales;
 	    person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontAccessQueueMales = FrontAccessQueueMales->nextPesron;
 	    g_numberOfMalesInAccessQueue--;
         free(temp);
@@ -586,12 +624,15 @@ struct personInformation dequeueNodeFromFemalesAccessQueue() {
     pthread_mutex_lock(&femalesAccessQueue_mutex );
     struct accessQueueNode * temp =NULL;
     struct personInformation person ={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontAccessQueueFemales == NULL) {
         printf("Underflow dequeueNodeFromFemalesAccessQueue\n");
-        return;
+        return person;
     } else {
         temp = FrontAccessQueueFemales;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontAccessQueueFemales = FrontAccessQueueFemales->nextPesron;
 	    g_numberOfFemalesInAccessQueue--;
         free(temp);
@@ -604,12 +645,15 @@ struct personInformation dequeueNodeFromGroupingAreaQueue() {
     pthread_mutex_lock(&groupingAreaQueue_mutex);
     struct accessQueueNode * temp =NULL;
     struct personInformation person ={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontForGroupingAreaQueue  == NULL) {
         printf("Underflow dequeueNodeFromGroupingAreaQueue\n");
-        return;
+        return person;
     } else {
         temp = FrontForGroupingAreaQueue;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForGroupingAreaQueue = FrontForGroupingAreaQueue->nextPesron;
         g_numberOfpeopleInGroupingArea--;
         free(temp);
@@ -622,12 +666,15 @@ struct personInformation dequeueNodeFromBirthCertificatesTellerQueue() {
     pthread_mutex_lock(&BirthCertificatesQueue_mutex);
     struct accessQueueNode * temp =NULL;
     struct personInformation person ={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontForBirthCertificatesTellerQueue   == NULL) {
         printf("Underflow dequeueNodeFromBirthCertificatesTellerQueue\n");
-        return;
+        return person;
     } else {
         temp = FrontForBirthCertificatesTellerQueue;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForBirthCertificatesTellerQueue = FrontForBirthCertificatesTellerQueue->nextPesron;
         g_numberOfpeopleInBirthCertificatesTellerQueue--;
         free(temp);
@@ -640,12 +687,15 @@ struct personInformation dequeueNodeFromTravelDocumentsTellerQueue() {
     pthread_mutex_lock(&TravelDocumentsQueue_mutex);
     struct accessQueueNode * temp =NULL;
     struct personInformation person ={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontForTravelDocumentsTellerQueue == NULL) {
         printf("Underflow dequeueNodeFromTravelDocumentsTellerQueue\n");
-        return;
+        return person;
     } else {
         temp = FrontForTravelDocumentsTellerQueue ;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForTravelDocumentsTellerQueue  = FrontForTravelDocumentsTellerQueue->nextPesron;
         g_numberOfpeopleInTravelDocumentsTellerQueue--;
         free(temp);
@@ -659,12 +709,15 @@ struct personInformation dequeueNodeFromFamilyReunionDocumentsTellerQueue() {
     pthread_mutex_lock(&FamilyReunionDocumentsQueue_mutex);
     struct accessQueueNode * temp =NULL;
     struct personInformation person ={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontForFamilyReunionDocumentsTellerQueue == NULL) {
         printf("Underflow dequeueNodeFromFamilyReunionDocumentsTellerQueue\n");
-        return;
+        return person;
     } else {
         temp = FrontForFamilyReunionDocumentsTellerQueue;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForFamilyReunionDocumentsTellerQueue   = FrontForFamilyReunionDocumentsTellerQueue->nextPesron;
         g_numberOfpeopleInFamilyReunionDocumentsTellerQueue--;
         free(temp);
@@ -678,12 +731,15 @@ struct personInformation dequeueNodeFromIDRelatedProblemsTellerQueue() {
     pthread_mutex_lock(&IDRelatedProblemsQueue_mutex);
     struct accessQueueNode * temp =NULL;
     struct personInformation person ={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontForIDRelatedProblemsTellerQueue == NULL) {
         printf("Underflow dequeueNodeFromIDRelatedProblemsTellerQueue\n");
-        return;
+        return person;
     } else {
         temp = FrontForIDRelatedProblemsTellerQueue;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForIDRelatedProblemsTellerQueue  = FrontForIDRelatedProblemsTellerQueue->nextPesron;
         g_numberOfpeopleInIDRelatedProblemsTellerQueue--;
         free(temp);
@@ -696,42 +752,60 @@ struct personInformation dequeueNodeFromIDRelatedProblemsTellerQueue() {
 struct personInformation dequeueNodeFromRollingGateQueueFemales() {
     pthread_mutex_lock(&femalesRollingGatQueue_mutex);
     struct accessQueueNode * temp =NULL;
-    struct personInformation person;
+    struct personInformation person={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontRollingGateQueueFemales == NULL) {
         printf("Underflow dequeueNodeFromRollingGateQueueFemales\n");
-        return;
+        return person;
     } else {
         temp = FrontRollingGateQueueFemales;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontRollingGateQueueFemales = FrontRollingGateQueueFemales->nextPesron;
         free(temp);
-	g_numberOfFemaelsInTheRollingGateQueue--;
+	    g_numberOfFemaelsInTheRollingGateQueue--;
     }
     return person;
     pthread_mutex_unlock(&femalesRollingGatQueue_mutex);
-
 }
 
 
 struct personInformation dequeueNodeFromRollingGateQueueMales() {
     pthread_mutex_lock(&malesRollingGatQueue_mutex);
     struct accessQueueNode * temp =NULL;
-    struct personInformation person;
+    struct personInformation person={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontRollingGateQueueMales == NULL) {
         printf("Underflow dequeueNodeFromRollingGateQueueMales\n");
-        return;
+        return person;
     } else {
         temp = FrontRollingGateQueueMales;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontRollingGateQueueMales = FrontRollingGateQueueMales->nextPesron;
         free(temp);
-	g_numberOfMaelsInTheRollingGateQueue--;
+	    g_numberOfMaelsInTheRollingGateQueue--;
     }
     return person;
     pthread_mutex_unlock(&malesRollingGatQueue_mutex);
 
 }
 
+
+void updateIndexOfQueue(struct accessQueueNode * FrontOfQueue){
+    struct accessQueueNode * tmp;
+    tmp = FrontOfQueue;
+    while (tmp != NULL)
+    {
+       tmp->personInfo.indexLocationInTheHostQueue=tmp->personInfo.indexLocationInTheHostQueue-1;
+       kill(tmp->personInfo.personID,SIGUSR1);//Signal to the process to move inside the host Queue
+       tmp=tmp->nextPesron;
+    }
+    
+
+}
 
 
 void displyGroupingAreaQueue(){
@@ -826,8 +900,6 @@ void creatPeople(){
         int i,pid;
         for(i =0;i<g_peopleUntil8am;i++){
                 
-		//Simulation for arrival time for the single persone as some dealy
-		sleep(randomIintegerInRange(minShiftingInArrivalTime,maxShiftingInArrivalTime));
 		
 		if ((pid = fork()) == -1) {
                         printf("fork failure\n");
@@ -835,20 +907,64 @@ void creatPeople(){
                 }
                 if (pid != 0){
       			    // Print the info for the arrival person:
-                struct personInformation person;
-                person.personID = pid;
-			    person.gender = g_gender[randomIintegerInRange(0,1)];
-			    person.officialDocumentNeeded  = randomIintegerInRange(0,3);
-                person.timerForPatience= randomIintegerInRange(20,30);
-                person.indexLocationInTheHostQueue=-1;
-                person.tiketNumberInGroupingArea=-1;
-			    printInfoForArrivalPerson(person);
-			    sleep(randomIintegerInRange(3,6));//simulation for time delaying
-                            enqueueToAccessQueues(person);
+                    struct personInformation person;
+                    person.personID = pid;
+			        person.gender = g_gender[randomIintegerInRange(0,1)];
+			        person.officialDocumentNeeded  = randomIintegerInRange(0,3);
+                    person.timerForPatience= randomIintegerInRange(20,30);
+                    person.indexLocationInTheHostQueue=-1;
+                    person.tiketNumberInGroupingArea=-1;
+			        printInfoForArrivalPerson(person);
+			        sleep(randomIintegerInRange(minShiftingInArrivalTime,maxShiftingInArrivalTime));//simulation for time delaying for arrival time
+                    enqueueToAccessQueues(person);
                 }
-		else
-			exit(-1);//pause();
+		        else
+			        break;//exit(-1);//pause();
         }
+
+        if (pid == 0){
+            childSensitiveSignals();
+            while (1)
+            {
+                //Pause until reseve signal from thread to move inside the host queue or
+                //until reseve signal from thread to move from queue to anothr 
+                pause(); 
+            } 
+        }
+}
+
+void childSensitiveSignals(){
+    //every person should be sensitive to a signal from threads to update his location in the host queue
+    if ( sigset(SIGUSR1, signalCatcher_movingTimeForchangeIndexLocationForPersonInTheHostQueue) == SIG_ERR ) {
+    perror("Sigset can not set SIGUSR1");
+    exit(SIGQUIT);
+    }
+
+    //every person should be sensitive to a signal from threads to change his location from queue to another queue
+    if ( sigset(SIGUSR2, signalCatcher_movingTimeForchangeLocationForPersonFromQueueToAnotherQueue) == SIG_ERR ) {
+    perror("Sigset can not set SIGUSR2");
+    exit(SIGQUIT);
+    }
+
+
+}
+
+void signalCatcher_movingTimeForchangeIndexLocationForPersonInTheHostQueue(int the_sig){
+    int movingTime= randomIintegerInRange(minTimeForMovingPersonInsideHostQueue,maxTimeForMovingPersonInsideHostQueue);
+    int i;
+    //printf("\n\nProcess change his location in the host Queue\n\n");
+    for(i=0;i<movingTime;i++){
+        //movingTime
+    }
+}
+
+void signalCatcher_movingTimeForchangeLocationForPersonFromQueueToAnotherQueue(int the_sig){
+    int movingTime= randomIintegerInRange(minTimeForMovingPersonFromQueueToAnotherQueue,maxTimeForMovingPersonFromQueueToAnotherQueue);
+    int i;
+    //printf("\n\nProcess move From Queue To Another Queue\n\n");
+    for(i=0;i<movingTime;i++){
+        //movingTime
+    }
 }
 
 
@@ -860,7 +976,8 @@ void insertToMalesRollingGateQueue() {
 	if (g_numberOfMaelsInTheRollingGateQueue < g_threshold && g_numberOfMalesInAccessQueue > 0){
 		
 		sleep(randomIintegerInRange(3,6));//simulation for dealy time for  moving from Access queue to Rolling gate queue
-		enqueueToRollingGateQueueMales();	
+		enqueueToRollingGateQueueMales();
+        updateIndexOfQueue(FrontAccessQueueMales);//updateIndexOfQueue for AccessQueueMales
 		//displyRollingGatesQueues();
 		//displyAccessQueues();
 
@@ -879,6 +996,7 @@ void insertToFemalesRollingGateQueue() {
 
                 sleep(randomIintegerInRange(3,6));//simulation for dealy time for  moving from Access queue to Rolling gate queue
                 enqueueToRollingGateQueueFemales();
+                updateIndexOfQueue(FrontAccessQueueFemales);//updateIndexOfQueue for AccessQueueFemales
                 //displyRollingGatesQueues();
                 //displyAccessQueues();
 
@@ -898,6 +1016,7 @@ void insertToMalesMetalDetector(){
 		fflush(stdout);
 		sleep(randomIintegerInRange(5,8));//simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
 		enqueueToGroupingAreaQueue(malePersonInMetalDetectorForMales);
+        updateIndexOfQueue(FrontRollingGateQueueMales);//updateIndexOfQueue for RollingGateQueueMales
 		//printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
 				
 	}
@@ -916,6 +1035,7 @@ void insertToFemalesMetalDetector(){
             fflush(stdout);
 		    sleep(randomIintegerInRange(5,8));//simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
             enqueueToGroupingAreaQueue(femalePersonInMetalDetectorForMales);
+            updateIndexOfQueue(FrontRollingGateQueueFemales);//updateIndexOfQueue for RollingGateQueueFemales
             //printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
 		    //fflush(stdout);
         }
@@ -943,6 +1063,8 @@ void insertToTellersQueues(){
 		else if (Person.officialDocumentNeeded == 3)
 			enqueueToIDRelatedProblemsTelleQueue(Person);
 
+        updateIndexOfQueue(FrontForGroupingAreaQueue);//updateIndexOfQueue for GroupingAreaQueue
+
 	}
 
   }
@@ -963,6 +1085,7 @@ void insertToBirthCertificatesTeller(){
 		        leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
                 printf("Person %d leave the Birth Certificates Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
                 fflush(stdout);
+                updateIndexOfQueue(FrontForBirthCertificatesTellerQueue);//updateIndexOfQueue for BirthCertificatesTellerQueue
         }
 
   }
@@ -984,6 +1107,7 @@ void insertToTravelDocumentsTeller(){
                 leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
                 printf("Person %d leave the Travel Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
                 fflush(stdout);
+                updateIndexOfQueue(FrontForTravelDocumentsTellerQueue);//updateIndexOfQueue for TravelDocumentsTellerQueue
         }
 
   }
@@ -1003,11 +1127,13 @@ void insertToFamilyReunionDocumentsTeller(){
                 leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
                 printf("Person %d leave the Family Reunion Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
                 fflush(stdout);
+                updateIndexOfQueue(FrontForFamilyReunionDocumentsTellerQueue);//updateIndexOfQueue for FamilyReunionDocumentsTellerQueue
         }
 
   }
 
 }
+
 void insertToIDRelatedProblemsTeller(){
 
   struct personInformation Person ;
@@ -1022,6 +1148,7 @@ void insertToIDRelatedProblemsTeller(){
                 leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
                 printf("Person %d leave the ID Related Problems Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
                 fflush(stdout);
+                updateIndexOfQueue(FrontForIDRelatedProblemsTellerQueue);//updateIndexOfQueue for IDRelatedProblemsTellerQueue
         }
 
   }
