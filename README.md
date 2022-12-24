@@ -113,11 +113,12 @@ set follow-exec-mode new
 * [ ] every person should be sensitive to a signal from threads to update his location in the host queue
 * [ ] every person should be sensitive to a signal from threads to change his location from queue to another queue
 * [ ] every person should be sensitive to a signal from parent to terminate
-* [ ] Dynamic number of tallers -> Arrays of Pointers
 * [ ] 1- message queue between the parnte and his childrens
 * [ ] 2- by this message queue, chaild tell the parent that his time patience ended 
 * [ ] 3- parent send signal to process to terminate
 * [ ] 4- parent send to ui the information of terminated process by messsage queue 
+* [ ] Dynamic number of tallers -> Arrays of Pointers
+* [ ] Update number of metal detectors
 
 #### UI
 
