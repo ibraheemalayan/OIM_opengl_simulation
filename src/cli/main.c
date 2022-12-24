@@ -333,6 +333,7 @@ void enqueueToRollingGateQueueMales(){
             return;
         } else {
                 person.indexLocationInTheHostQueue=g_numberOfMaelsInTheRollingGateQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
 		        //printf("Person %d Enter Males Rolling Gate Queue, Official Document Needed is \n", ptr->personInfo.personID);
 		        fflush(stdout);
@@ -364,6 +365,7 @@ void enqueueToRollingGateQueueFemales(){
         return;
         } else {
                 person.indexLocationInTheHostQueue=g_numberOfFemaelsInTheRollingGateQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontRollingGateQueueFemales == NULL) {
                     FrontRollingGateQueueFemales = ptr;
@@ -394,6 +396,7 @@ void enqueueToGroupingAreaQueue(struct personInformation personInf){
             return;
         } else {
                 person.indexLocationInTheHostQueue=g_numberOfpeopleInGroupingArea;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForGroupingAreaQueue == NULL) {
                     FrontForGroupingAreaQueue = ptr;
@@ -426,6 +429,7 @@ void enqueueToBirthCertificatesTelleQueue(struct personInformation personInf){
             return;
         } else {
                 person.indexLocationInTheHostQueue=g_numberOfpeopleInBirthCertificatesTellerQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForBirthCertificatesTellerQueue == NULL) {
                     FrontForBirthCertificatesTellerQueue = ptr;
@@ -456,6 +460,7 @@ void enqueueToTravelDocumentsTelleQueue(struct personInformation personInf){
             return;
         } else {
                 person.indexLocationInTheHostQueue=g_numberOfpeopleInTravelDocumentsTellerQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForTravelDocumentsTellerQueue == NULL) {
                     FrontForTravelDocumentsTellerQueue = ptr;
@@ -486,6 +491,7 @@ void enqueueToFamilyReunionDocumentsTelleQueue(struct personInformation personIn
             return;
         } else {
                 person.indexLocationInTheHostQueue=g_numberOfpeopleInFamilyReunionDocumentsTellerQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForFamilyReunionDocumentsTellerQueue    == NULL) {
                     FrontForFamilyReunionDocumentsTellerQueue = ptr;
@@ -516,6 +522,7 @@ void enqueueToIDRelatedProblemsTelleQueue(struct personInformation personInf){
             return;
         } else {
                 person.indexLocationInTheHostQueue=g_numberOfpeopleInIDRelatedProblemsTellerQueue;//update Index
+                kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
                 ptr->personInfo=person;
                 if (FrontForIDRelatedProblemsTellerQueue == NULL) {
                     FrontForIDRelatedProblemsTellerQueue = ptr;
@@ -551,6 +558,7 @@ void enqueueToAccessQueues(struct personInformation person) {
 	if (person.gender == 'M'){
             pthread_mutex_lock(&malesAccessQueue_mutex);
             person.indexLocationInTheHostQueue=g_numberOfMalesInAccessQueue;//update Index
+            kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
 	        ptr->personInfo = person;
 		    if (FrontAccessQueueMales == NULL) {
             	FrontAccessQueueMales = ptr;
@@ -568,6 +576,7 @@ void enqueueToAccessQueues(struct personInformation person) {
 	} else {
             pthread_mutex_lock(&femalesAccessQueue_mutex);
             person.indexLocationInTheHostQueue=g_numberOfFemalesInAccessQueue;//update Index
+            kill(person.personID,SIGUSR1);//Signal to the process to move inside the host Queue
 		    ptr->personInfo = person;
             if (FrontAccessQueueFemales == NULL) {
             FrontAccessQueueFemales = ptr;
@@ -602,6 +611,7 @@ struct personInformation dequeueNodeFromMalesAccessQueue() {
         temp = FrontAccessQueueMales;
 	    person = temp->personInfo;
         person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontAccessQueueMales = FrontAccessQueueMales->nextPesron;
 	    g_numberOfMalesInAccessQueue--;
         free(temp);
@@ -622,6 +632,7 @@ struct personInformation dequeueNodeFromFemalesAccessQueue() {
         temp = FrontAccessQueueFemales;
         person = temp->personInfo;
         person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontAccessQueueFemales = FrontAccessQueueFemales->nextPesron;
 	    g_numberOfFemalesInAccessQueue--;
         free(temp);
@@ -642,6 +653,7 @@ struct personInformation dequeueNodeFromGroupingAreaQueue() {
         temp = FrontForGroupingAreaQueue;
         person = temp->personInfo;
         person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForGroupingAreaQueue = FrontForGroupingAreaQueue->nextPesron;
         g_numberOfpeopleInGroupingArea--;
         free(temp);
@@ -662,6 +674,7 @@ struct personInformation dequeueNodeFromBirthCertificatesTellerQueue() {
         temp = FrontForBirthCertificatesTellerQueue;
         person = temp->personInfo;
         person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForBirthCertificatesTellerQueue = FrontForBirthCertificatesTellerQueue->nextPesron;
         g_numberOfpeopleInBirthCertificatesTellerQueue--;
         free(temp);
@@ -682,6 +695,7 @@ struct personInformation dequeueNodeFromTravelDocumentsTellerQueue() {
         temp = FrontForTravelDocumentsTellerQueue ;
         person = temp->personInfo;
         person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForTravelDocumentsTellerQueue  = FrontForTravelDocumentsTellerQueue->nextPesron;
         g_numberOfpeopleInTravelDocumentsTellerQueue--;
         free(temp);
@@ -703,6 +717,7 @@ struct personInformation dequeueNodeFromFamilyReunionDocumentsTellerQueue() {
         temp = FrontForFamilyReunionDocumentsTellerQueue;
         person = temp->personInfo;
         person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForFamilyReunionDocumentsTellerQueue   = FrontForFamilyReunionDocumentsTellerQueue->nextPesron;
         g_numberOfpeopleInFamilyReunionDocumentsTellerQueue--;
         free(temp);
@@ -724,6 +739,7 @@ struct personInformation dequeueNodeFromIDRelatedProblemsTellerQueue() {
         temp = FrontForIDRelatedProblemsTellerQueue;
         person = temp->personInfo;
         person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontForIDRelatedProblemsTellerQueue  = FrontForIDRelatedProblemsTellerQueue->nextPesron;
         g_numberOfpeopleInIDRelatedProblemsTellerQueue--;
         free(temp);
@@ -737,19 +753,21 @@ struct personInformation dequeueNodeFromRollingGateQueueFemales() {
     pthread_mutex_lock(&femalesRollingGatQueue_mutex);
     struct accessQueueNode * temp =NULL;
     struct personInformation person={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontRollingGateQueueFemales == NULL) {
         printf("Underflow dequeueNodeFromRollingGateQueueFemales\n");
         return person;
     } else {
         temp = FrontRollingGateQueueFemales;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontRollingGateQueueFemales = FrontRollingGateQueueFemales->nextPesron;
         free(temp);
 	    g_numberOfFemaelsInTheRollingGateQueue--;
     }
     return person;
     pthread_mutex_unlock(&femalesRollingGatQueue_mutex);
-
 }
 
 
@@ -757,12 +775,15 @@ struct personInformation dequeueNodeFromRollingGateQueueMales() {
     pthread_mutex_lock(&malesRollingGatQueue_mutex);
     struct accessQueueNode * temp =NULL;
     struct personInformation person={0};
+    person.indexLocationInTheHostQueue=-1;//update Index
     if (FrontRollingGateQueueMales == NULL) {
         printf("Underflow dequeueNodeFromRollingGateQueueMales\n");
         return person;
     } else {
         temp = FrontRollingGateQueueMales;
         person = temp->personInfo;
+        person.indexLocationInTheHostQueue=-1;//update Index
+        kill(person.personID,SIGUSR2);//Signal to the process to move to the next Queue
         FrontRollingGateQueueMales = FrontRollingGateQueueMales->nextPesron;
         free(temp);
 	    g_numberOfMaelsInTheRollingGateQueue--;
@@ -779,6 +800,7 @@ void updateIndexOfQueue(struct accessQueueNode * FrontOfQueue){
     while (tmp != NULL)
     {
        tmp->personInfo.indexLocationInTheHostQueue=tmp->personInfo.indexLocationInTheHostQueue-1;
+       kill(tmp->personInfo.personID,SIGUSR1);//Signal to the process to move inside the host Queue
        tmp=tmp->nextPesron;
     }
     
@@ -930,6 +952,7 @@ void childSensitiveSignals(){
 void signalCatcher_movingTimeForchangeIndexLocationForPersonInTheHostQueue(int the_sig){
     int movingTime= randomIintegerInRange(minTimeForMovingPersonInsideHostQueue,maxTimeForMovingPersonInsideHostQueue);
     int i;
+    //printf("\n\nProcess change his location in the host Queue\n\n");
     for(i=0;i<movingTime;i++){
         //movingTime
     }
@@ -938,7 +961,7 @@ void signalCatcher_movingTimeForchangeIndexLocationForPersonInTheHostQueue(int t
 void signalCatcher_movingTimeForchangeLocationForPersonFromQueueToAnotherQueue(int the_sig){
     int movingTime= randomIintegerInRange(minTimeForMovingPersonFromQueueToAnotherQueue,maxTimeForMovingPersonFromQueueToAnotherQueue);
     int i;
-    printf("\n\nProcess move From Queue To Another Queue\n\n");
+    //printf("\n\nProcess move From Queue To Another Queue\n\n");
     for(i=0;i<movingTime;i++){
         //movingTime
     }
