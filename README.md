@@ -107,8 +107,10 @@ set follow-exec-mode new
 
 #### Backend mohammad : written in [3:17PM 12/24/2022]
 * [X] add mutix on all queues
-* [ ] add ticket number to person struct
-* [ ] add index to person struct, refers to person location in the host queue
+* [X] add ticket number to person struct = -1
+* [X] add index to person struct, refers to person location in the host queue = -1
+* [ ] keep updating the index of the person in "the person struct" depends on the host queue
+* [ ] update the value of the ticket number in person struct
 * [ ] decrement the time patience of the person
 * [ ] every person should be sensitive to a signal from threads to update his location in the host queue
 * [ ] every person should be sensitive to a signal from threads to change his location from queue to another queue
