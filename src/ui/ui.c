@@ -1,24 +1,14 @@
-#include <GL/glut.h> // GLUT, include glu.h and gl.h
-#include "../include.h"
-#include "../std.h"
-
-#define QUEUE_1_Y_VALUE 2
-#define QUEUE_2_Y_VALUE -2
-
-#define RIGHT_DIRECTION 1
-#define LEFT_DIRECTION -1
+#include "./ui_helper.h"
+#include "./structs.h"
+#include "./globals.h"
 
 void paint_and_swap_frame();
 void background();
-void reshape(int, int);
-
-void draw_person(float x, float y, float size, int R, int G, int B, int gender);
 
 void recursive_timed_update(int time);
 
 // void draw_palestine_flag();
 void validate_args(int argc, char *argv[]);
-
 
 /* Handler for window-repaint event. Call back when the window first appears and
    whenever the window needs to be re-painted. */
@@ -31,61 +21,88 @@ void paint_and_swap_frame()
     // Draw Palestine flage
     // draw_palestine_flag();
 
-    // draw_person(team_1_x, QUEUE_1_Y_VALUE, 0.5, 0, 0, 255, 1);
+    // Draw the queues
+    draw_queues();
+
+    draw_people_in_queues();
+
     glutSwapBuffers(); // Swap the buffers (replace current frame with the new one)
 }
 
-void background()
+void validate_args(int argc, char *argv[])
 {
-    glClearColor(1.0, 1.0, 1.0, 1.0);
 }
 
-
-void exit_trigger(int sig)
+void recursive_timed_update(int time)
 {
-    printf("Exiting...\n");
-    exit(0);
+    if (!simulation_finished)
+    {
+        glutTimerFunc(1000 / FPS, recursive_timed_update, 0);
+    }
+    glutPostRedisplay(); // marks the current window as needing to be redisplayed
+
+    for (int i = 0; i < people_count; i++)
+    {
+        update_person_location(people[i]);
+    }
 }
 
-
-void reshape(int w, int h)
+void setup_ui(int argc, char **argv)
 {
-    // ViewPort
-    glViewport(0, 0, 800, 400);
 
-    // Projection
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(-14, 10, -5, 5); // FIXME left, right, bottom, top change to 100
-    glMatrixMode(GL_MODELVIEW);
+    glutInit(&argc, argv);                       // Initialize GLUT
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE); // for animation
+
+    glutInitWindowSize(1750, 700);               // Set the window's initial width & height
+    glutInitWindowPosition(0, 0);                // Position the window's initial top-left corner of the screen
+    glutCreateWindow("OIM Simulation");          // Create a window with the given title
+    glutDisplayFunc(paint_and_swap_frame);       // Register display callback handler for window re-paint
+    glutReshapeFunc(reshape);                    // Static display
+    glutTimerFunc(0, recursive_timed_update, 0); // Call function after specified amount of time
+
+    background(); // Background color
 }
 
+void create_people()
+{
+
+    for (int i = 0; i < people_count; i++)
+    {
+
+        gender g = (rand() % 2) ? Male : Female;
+        Queue *q = (g == Male) ? queue_A1 : queue_A2;
+
+        people[i] = create_person(i, q->current_people, g, ((float)(rand() % 8)) * 0.1, q);
+
+        people[i]->destination_coords = get_queue_location_coords_for_index(q, people[i]->index_in_queue);
+
+        q->current_people++;
+    }
+}
 
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char **argv)
 {
 
     printf("Starting UI...\n");
-    // srand(time(NULL)); // initialize random seed
 
-    setup_signals(); // does nothing in standalone mode
+    srand(time(NULL)); // initialize random seed
+
+    // setup_signals(); // does nothing in standalone mode
 
     // open_pipes();              // does nothing in standalone mode
     validate_args(argc, argv); // does nothing in standalone mode
 
-    glutInit(&argc, argv);                       // Initialize GLUT
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE); // for animation
+    setup_ui(argc, argv);
 
-    glutInitWindowSize(800, 400);          // Set the window's initial width & height
-    glutInitWindowPosition(50, 50);        // Position the window's initial top-left corner
-    glutCreateWindow("Free Palestine ");   // Create a window with the given title
-    glutDisplayFunc(paint_and_swap_frame);              // Register display callback handler for window re-paint
-    glutReshapeFunc(reshape);              // Static display
-    glutTimerFunc(0, recursive_timed_update, 0); // Call function after specified amount of time
+    queue_A1 = (Queue *)malloc(sizeof(Queue));
+    queue_A2 = (Queue *)malloc(sizeof(Queue));
 
-    background();                          // Background color
+    initialize_queues(queue_A1, queue_A2);
 
-    glutMainLoop();                        // Enter the event-processing loop
-    
+    create_people();
+
+    glutMainLoop(); // Enter the event-processing loop
+
     return 0;
 }

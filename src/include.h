@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <math.h>
 #include <unistd.h>
 #include <string.h>
 #include <limits.h>
@@ -19,17 +20,7 @@
 #include <time.h>
 #include <errno.h>
 
-#define PLAYERS_PER_TEAM 5
-#define DEFAULT_MAX_SCORE 5
-
-#define TEAM1FIFO "/tmp/TEAM1FIFO"
-#define TEAM2FIFO "/tmp/TEAM2FIFO"
-
-#define MAX_SPEED_PER_FRAM 0.3
-#define FPS 120
-
 #define UISIG 7
-
 
 // TODO
 struct message

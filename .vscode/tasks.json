@@ -1,13 +1,22 @@
 {
+    "options": {
+        "env": {
+            "DISPLAY": ":0"
+        }
+    },
     "tasks": [
         {
             "type": "cppbuild",
             "label": "C/C++: gcc build active file",
             "command": "/usr/bin/gcc",
             "args": [
+                "${file}",
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}",
+                "-lm",
+                "-lGL",
+                "-lGLU",
+                "-lglut",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],
