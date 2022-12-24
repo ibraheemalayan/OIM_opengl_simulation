@@ -1,7 +1,7 @@
 #ifndef __LOCAL_H_
 #define __LOCAL_H_
 
-
+#include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
