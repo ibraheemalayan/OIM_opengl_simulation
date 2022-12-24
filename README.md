@@ -109,16 +109,16 @@ set follow-exec-mode new
 * [X] add mutix on all queues
 * [X] add ticket number to person struct = -1
 * [X] add index to person struct, refers to person location in the host queue = -1
-* [ ] keep updating the index of the person in "the person struct" depends on the host queue
+* [X] keep updating the index of the person in "the person struct" depends on the host queue
 * [ ] update the value of the ticket number in person struct
 * [ ] decrement the time patience of the person
-* [ ] every person should be sensitive to a signal from threads to update his location in the host queue
-* [ ] every person should be sensitive to a signal from threads to change his location from queue to another queue
+* [X] every person should be sensitive to a signal from threads to update his location in the host queue
+* [X] every person should be sensitive to a signal from threads to change his location from queue to another queue
 * [ ] every person should be sensitive to a signal from parent to terminate
 * [ ] 1- message queue between the parnte and his childrens
-* [ ] 2- by this message queue, chaild tell the parent that his time patience ended 
+* [ ] 2- by this message queue(1), chaild tell the parent that his time patience ended 
 * [ ] 3- parent send signal to process to terminate
-* [ ] 4- parent send to ui the information of terminated process by messsage queue 
+* [ ] 4- parent send to ui the information of terminated process by messsage queue(2) 
 * [ ] Dynamic number of tallers -> Arrays of Pointers
 * [ ] Update number of metal detectors
 
