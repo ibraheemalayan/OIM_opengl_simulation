@@ -124,17 +124,18 @@ set follow-exec-mode new
 
 #### UI
 
-* [ ] function to draw male
-* [ ] function to draw female
+* [X] function to draw male
+* [X] function to draw female
 * [ ] draw background
 * [ ] draw the center queues
 * [ ] draw the ticket label for each person
 * [ ] draw tellers
+* [X] draw rotating rolling gates
 * [ ] draw metal detector
 * [ ] draw officers
 * [ ] update styling (colors & fonts)
 * [ ] function to move all people in a queue
-* [ ] function to organize people in waiting areas
+* [X] function to organize people in waiting areas
 * [ ] function for impatient people to leave ( just let them go up until the end of the screen )
 
 
