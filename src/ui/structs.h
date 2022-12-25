@@ -1,14 +1,6 @@
 #ifndef __UI_STRUCTS_H_
 #define __UI_STRUCTS_H_
 
-enum gender
-{
-    Male,
-    Female
-};
-
-typedef enum gender gender;
-
 struct Coordinations
 {
     float x;

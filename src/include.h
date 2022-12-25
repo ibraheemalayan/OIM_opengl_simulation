@@ -22,12 +22,42 @@
 
 #define UISIG 7
 
-// TODO
+enum MsgType
+{
+  Enter,
+  Update,
+  Exit,
+};
+
+enum Gender
+{
+  Male,
+  Female
+};
+
+enum Location
+{
+  MaleOutsideGatesArea,     // 0
+  FemaleOutsideGatesArea,   // 1
+  MaleMetalDetectorQueue,   // 2
+  FemaleMetalDetectorQueue, // 3
+  MetalDetector,            // 4
+  InnerGroupingArea,        // 5
+  Teller                    // teller 1 will be 6, teller 2 will be 7 and so on
+};
+
+typedef enum Location Location;
+typedef enum Gender gender;
+typedef enum MsgType MsgType;
+
 struct message
 {
-  int personPid;
-  int msg_type;
-  char msg[50];
+  MsgType msg_type;
+  int person_pid;
+  float angriness;
+  gender gender;
+  int index_in_queue; // index if inside a queue
+  Location current_location;
 };
 
 #endif

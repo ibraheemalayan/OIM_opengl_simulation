@@ -24,6 +24,13 @@ void paint_and_swap_frame()
     // Draw the queues
     draw_queues();
 
+    draw_walls();
+
+    draw_rolling_gate(ROLLING_GATES_X, ROLLING_GATES_Y);
+    draw_rolling_gate(ROLLING_GATES_X, -ROLLING_GATES_Y);
+
+    // draw_rolling_gate(0, -100);
+
     draw_people_in_queues();
 
     glutSwapBuffers(); // Swap the buffers (replace current frame with the new one)
@@ -45,6 +52,8 @@ void recursive_timed_update(int time)
     {
         update_person_location(people[i]);
     }
+
+    rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
 }
 
 void setup_ui(int argc, char **argv)

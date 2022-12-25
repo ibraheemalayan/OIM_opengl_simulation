@@ -10,4 +10,7 @@ Person *people[500];
 int people_count = 300;
 
 int simulation_finished = 0;
+
+double rolling_gate_rotation = 0;
+
 #endif

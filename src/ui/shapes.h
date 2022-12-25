@@ -11,6 +11,7 @@ void background();
 void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B);
 void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, int G, int B);
 void draw_person(Person *p);
+void draw_rolling_gate(GLfloat x, GLfloat y);
 
 /*
  * Function that handles the drawing of a circle using the triangle fan
@@ -69,6 +70,62 @@ void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, 
     glVertex2f(x, y + height);
     glEnd();
 }
+
+void draw_walls()
+{
+    int R = 100, G = 0, B = 100;
+
+    float wall_thickness = ROLLING_GATE_SIZE / 10;
+    float wall_x = ROLLING_GATES_X - wall_thickness / 2;
+
+    float gate_1_top = ROLLING_GATES_Y + ROLLING_GATE_SIZE / 2;
+    draw_rectangle(wall_x, gate_1_top, wall_thickness, 500 - gate_1_top, R, G, B);
+
+    float gate_2_bottom = -ROLLING_GATES_Y - ROLLING_GATE_SIZE / 2;
+    draw_rectangle(wall_x, gate_2_bottom, wall_thickness, -500 + gate_1_top, R, G, B);
+
+    float gate_1_bottom_y = ROLLING_GATES_Y - ROLLING_GATE_SIZE / 2;
+    float gate_2_top_y = -ROLLING_GATES_Y + ROLLING_GATE_SIZE / 2;
+
+    draw_rectangle(wall_x, gate_2_top_y, wall_thickness, gate_1_bottom_y - gate_2_top_y, R, G, B);
+
+    // middle wall
+    draw_rectangle(wall_x, 0, -500, wall_thickness, R, G, B);
+}
+
+void draw_rolling_gate(GLfloat x, GLfloat y)
+{
+    float height = ROLLING_GATE_SIZE, width = ROLLING_GATE_SIZE, thickness = ROLLING_GATE_SIZE / 10;
+
+    glPushMatrix();
+
+    float x_translate = x;
+    float y_translate = y;
+
+    glTranslatef(x_translate, y_translate, 0); // move the Z axis to the center of the gate
+
+    glRotatef(rolling_gate_rotation, 0, 0, 1); // set the rotation to be aroung the Z axis
+
+    glTranslatef(-x_translate, -y_translate, 0); // move the Z axis back to the original position
+
+    glBegin(GL_QUADS);
+    glColor3ub(0, 20, 0);
+    glVertex2f(x - thickness / 2, y - height / 2);
+    glVertex2f(x + thickness / 2, y - height / 2);
+    glVertex2f(x + thickness / 2, y + height / 2);
+    glVertex2f(x - thickness / 2, y + height / 2);
+    glEnd();
+
+    glBegin(GL_QUADS);
+    glColor3ub(0, 20, 0);
+    glVertex2f(x - height / 2, y - thickness / 2);
+    glVertex2f(x + height / 2, y - thickness / 2);
+    glVertex2f(x + height / 2, y + thickness / 2);
+    glVertex2f(x - height / 2, y + thickness / 2);
+    glEnd();
+
+    glPopMatrix();
+};
 
 void reshape(int width, int height)
 {
