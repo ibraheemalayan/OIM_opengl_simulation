@@ -33,6 +33,7 @@ debug_gui: compile_gui_debug;
 compile_cli:
 	@echo "Compiling..."
 	gcc -pthread cli/main.c -o bin/main.o
+	gcc -pthread cli/child.c -o bin/child.o
 #	gcc cli/standalone_child.c -lm -o bin/standalone_child.o
 
 
