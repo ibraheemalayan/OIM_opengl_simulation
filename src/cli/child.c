@@ -3,24 +3,31 @@
 
 //............Functions..............
 int randomIntegerInRange(int lower, int upper);
-void childSensitiveSignals();
-void signalCatcher_movingTimeForchangeIndexLocationForPersonInTheHostQueue(int the_sig);
-void signalCatcher_movingTimeForchangeLocationForPersonFromQueueToAnotherQueue(int the_sig);
+void register_signal_handlers();
+void handle_officer_order_signal(int the_sig);
+void handle_alarm_signal(int the_sig);
 void printInfoForChildPerson(char *argv[]);
 void setup_message_queue();
+void validate_args(int argc, char *argv[]);
+void update_ui(MsgType msg_type);
 
-#define MAX_PATIENCE_TIME 1000
-#define MIN_PATIENCE_TIME 100
+#define MAX_PATIENCE_TIME 100
+#define MIN_PATIENCE_TIME 20
+#define PATIENCE_STEP 1
+#define FIRST_ALARM_FACTOR 1000   // 10 ms
+#define ALARM_INTERVAL 400 * 1000 // 400 ms
 
 int ui_msgq_id;
 int parent_msgq_id;
 
-int my_max_patience;
-int waited_time = 0;
+float my_max_patience;
+float waited_time = 0.0f;
+
+pid_t my_pid;
 
 int index_in_queue; // index if inside a queue
 Location current_location;
-gender gen;
+gender my_gender;
 DocumentType doc_type;
 
 void validate_args(int argc, char *argv[])
@@ -35,7 +42,7 @@ void validate_args(int argc, char *argv[])
     }
 
     // the first argument is -1 if last child
-    if (!(gen = atoi(argv[1])) || (gen != Male && gen != Female))
+    if (!(my_gender = atoi(argv[1])) || (my_gender != Male && my_gender != Female))
     {
         errno = EINVAL;
         red_stdout();
@@ -44,6 +51,8 @@ void validate_args(int argc, char *argv[])
         reset_stdout();
         exit(-1);
     };
+
+    current_location = (my_gender == Male) ? MaleOutsideGatesArea : FemaleOutsideGatesArea;
 
     doc_type = atoi(argv[2]);
 
@@ -75,39 +84,41 @@ void main(int argc, char *argv[])
 
     validate_args(argc, argv);
 
+    my_pid = getpid();
+
     my_max_patience = randomIntegerInRange(MIN_PATIENCE_TIME, MAX_PATIENCE_TIME);
 
     printInfoForChildPerson(argv);
-    childSensitiveSignals();
+
+    register_signal_handlers();
+
     setup_message_queue();
 
-    // while true
-    // if there are index updates from parent, read them and tell ui
-    // update patience
-    // tell ui
+    update_ui(PersonEntered);
+
+    // Set an alarm to go off in VALUE microseconds. every INTERVAL microseconds.
+
+    ualarm(FIRST_ALARM_FACTOR * my_max_patience, ALARM_INTERVAL);
 
     while (1)
     {
-        // Pause until reseve signal from thread to move inside the host queue or
-        // until reseve signal from thread to move from queue to anothr
-        // pause();
-
-        // parent_msgq_id
+        pause();
     }
 }
 
-void childSensitiveSignals()
+void register_signal_handlers()
 {
-    // every person should be sensitive to a signal from threads to update his location in the host queue
-    if (sigset(SIGUSR1, signalCatcher_movingTimeForchangeIndexLocationForPersonInTheHostQueue) == -1)
+    // register handler for SIGUSR1, which is sent by the parent process when it wants to change the index of the child
+    if (sigset(SIGUSR1, handle_officer_order_signal) == -1 || sigset(SIGUSR2, handle_officer_order_signal) == -1)
     {
-        perror("Sigset can not set SIGUSR1");
+        perror("Sigset can not set SIGUSR1 or SIGUSR2");
         exit(SIGQUIT);
     }
-    // every person should be sensitive to a signal from threads to change his location from queue to another queue
-    if (sigset(SIGUSR2, signalCatcher_movingTimeForchangeLocationForPersonFromQueueToAnotherQueue) == -1)
+
+    // register handler for SIGUSR1, which is sent by the parent process when it wants to change the index of the child
+    if (sigset(SIGALRM, handle_alarm_signal) == -1)
     {
-        perror("Sigset can not set SIGUSR2");
+        perror("Sigset can not set SIGALRM");
         exit(SIGQUIT);
     }
 }
@@ -144,29 +155,49 @@ void setup_message_queue()
     }
 }
 
-void signalCatcher_movingTimeForchangeIndexLocationForPersonInTheHostQueue(int the_sig)
+void handle_officer_order_signal(int the_sig)
 {
-    // int movingTime = randomIntegerInRange(minTimeForMovingPersonInsideHostQueue, maxTimeForMovingPersonInsideHostQueue);
-    // int i;
-    // // printf("\n\nProcess change his location in the host Queue\n\n");
-    // // fflush(stdout);
-    // for (i = 0; i < movingTime; i++)
-    // {
-    //     // movingTime
-    // }
+    parent_message_buf message_queue_buffer;
+
+    // read messages intended for this child
+    if (msgrcv(parent_msgq_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), my_pid, IPC_NOWAIT | MSG_NOERROR) == -1)
+    {
+        if (errno == ENOMSG)
+        {
+            red_stdout();
+            printf("No message of type %d in the queue, although the parent sent a signal", my_pid);
+            reset_stdout();
+            return;
+            // exit(2); // FIXME
+        }
+
+        // if the error is not ENOMSG, then it is an error
+        perror("msgrcv");
+        exit(3);
+    }
+
+    index_in_queue = message_queue_buffer.payload.index_in_queue;
+    current_location = message_queue_buffer.payload.current_location;
+
+    update_ui(PersonUpdated);
 }
 
-void signalCatcher_movingTimeForchangeLocationForPersonFromQueueToAnotherQueue(int the_sig)
+void handle_alarm_signal(int the_sig)
 {
+    waited_time += PATIENCE_STEP;
 
-    // int movingTime = randomIntegerInRange(minTimeForMovingPersonFromQueueToAnotherQueue, maxTimeForMovingPersonFromQueueToAnotherQueue);
-    // int i;
-    // // printf("\n\nProcess move From Queue To Another Queue\n\n");
-    // // fflush(stdout);
-    // for (i = 0; i < movingTime; i++)
-    // {
-    //     // movingTime
-    // }
+    if (waited_time >= my_max_patience)
+    {
+        red_stdout();
+        printf("Person %d has left the queue because he waited too long", my_pid);
+        reset_stdout();
+
+        update_ui(PersonExitedUnserved);
+
+        exit(0);
+    }
+
+    update_ui(PersonUpdated);
 }
 
 int randomIntegerInRange(int lower, int upper)
@@ -178,6 +209,27 @@ int randomIntegerInRange(int lower, int upper)
 void printInfoForChildPerson(char *argv[])
 {
     printf(
-        "person{pid:%d, gender:%d, index:%d, document:%d, patience:%d}\n", getpid(), gen, index_in_queue, doc_type, my_max_patience);
+        "person{pid:%d, gender:%d, index:%d, document:%d, patience:%f}\n", getpid(), my_gender, index_in_queue, doc_type, my_max_patience);
     fflush(stdout);
+}
+
+void update_ui(MsgType msg_type)
+{
+
+    message_buf buf;
+
+    buf.mtype = PERSON;
+
+    buf.payload.msg_type = msg_type;
+    buf.payload.person_pid = my_pid;
+    buf.payload.angriness = waited_time / my_max_patience;
+    buf.payload.gender = my_gender;
+    buf.payload.index_in_queue = index_in_queue;
+    buf.payload.current_location = current_location;
+
+    if (msgsnd(ui_msgq_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("ui msgsnd in child");
+        exit(3);
+    }
 }

@@ -13,13 +13,13 @@ void create_and_setup_message_queue()
     key_t key;
 
     // remove queue if exists
-    remove("msgq.txt");
+    remove("ui_queue.bin");
 
     // create file to use as message queue key
-    system("touch msgq.txt");
-    system("chmod 666 msgq.txt");
+    system("touch ui_queue.bin");
+    system("chmod 666 ui_queue.bin");
 
-    if ((key = ftok("msgq.txt", 'B')) == -1)
+    if ((key = ftok("ui_queue.bin", 30)) == -1)
     {
         perror("ftok");
         exit(1);
@@ -202,7 +202,7 @@ void write_mock_messages()
 
     sleep(2);
 
-    buf.payload.msg_type = PersonExited;
+    buf.payload.msg_type = PersonExitedUnserved;
     buf.payload.person_pid = 126;
     buf.payload.angriness = 0.5;
     buf.payload.gender = Male;
@@ -222,7 +222,7 @@ void clean_queues()
     msgctl(msg_q_id, IPC_RMID, NULL);
 
     // remove the queue file
-    remove("msgq.txt");
+    remove("ui_queue.bin");
 }
 
 static void interrupt_sig_handler(int sig)
