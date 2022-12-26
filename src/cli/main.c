@@ -6,6 +6,7 @@
 // 1. Fork & Exec UI
 // 2. Rename symbols that has Typos
 // 3. Color output & replace flush with reset_stdout
+// 4. Threads performance
 
 //..........Fuctions........................
 void readInputFile();
