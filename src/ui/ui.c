@@ -35,8 +35,6 @@ void setup_message_queue()
         perror("msgget, error getting queue");
         exit(2);
     }
-
-    printf("\n\nmessage queue: ready to read messages in the UI.\n");
 }
 
 /* Handler for window-repaint event. Call back when the window first appears and
