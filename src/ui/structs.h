@@ -1,13 +1,7 @@
 #ifndef __UI_STRUCTS_H_
 #define __UI_STRUCTS_H_
 
-enum gender
-{
-    Male,
-    Female
-};
-
-typedef enum gender gender;
+#include "../include.h"
 
 struct Coordinations
 {
@@ -39,5 +33,19 @@ struct Person
     Queue *current_queue;
 };
 typedef struct Person Person;
+
+void print_person(Person *person)
+{
+    printf("{ id: %d, gender: %d, index: %d, q: %p, anger: %f, current_coords: (x: %f, y: %f), , dest_coords: (x: %f, y: %f)\n",
+           person->id,
+           person->gender,
+           person->index_in_queue,
+           person->current_queue,
+           person->angriess,
+           person->current_coords.x,
+           person->current_coords.y,
+           person->destination_coords.x,
+           person->destination_coords.y);
+}
 
 #endif

@@ -98,25 +98,44 @@ set follow-exec-mode new
 * [X] add contributors names/ids
 * [ ] add a demo GIF in this README
 
-#### Backend
+#### Backend ibraheem
 
 * [ ] create the message queues ( and delete on exit )
 * [ ] message struct & message types
 * [ ] configs file and its loading function (.env maybe)
 
+
+#### Backend mohammad : written in [3:17PM 12/24/2022]
+* [X] add mutix on all queues
+* [X] add ticket number to person struct = -1
+* [X] add index to person struct, refers to person location in the host queue = -1
+* [X] keep updating the index of the person in "the person struct" depends on the host queue
+* [ ] update the value of the ticket number in person struct
+* [ ] decrement the time patience of the person
+* [X] every person should be sensitive to a signal from threads to update his location in the host queue
+* [X] every person should be sensitive to a signal from threads to change his location from queue to another queue
+* [ ] every person should be sensitive to a signal from parent to terminate
+* [ ] 1- message queue between the parnte and his childrens
+* [ ] 2- by this message queue(1), chaild tell the parent that his time patience ended 
+* [ ] 3- parent send signal to process to terminate
+* [ ] 4- parent send to ui the information of terminated process by messsage queue(2) 
+* [ ] Dynamic number of tallers -> Arrays of Pointers
+* [ ] Update number of metal detectors
+
 #### UI
 
-* [ ] function to draw male
-* [ ] function to draw female
+* [X] function to draw male
+* [X] function to draw female
 * [ ] draw background
 * [ ] draw the center queues
 * [ ] draw the ticket label for each person
 * [ ] draw tellers
+* [X] draw rotating rolling gates
 * [ ] draw metal detector
 * [ ] draw officers
 * [ ] update styling (colors & fonts)
 * [ ] function to move all people in a queue
-* [ ] function to organize people in waiting areas
+* [X] function to organize people in waiting areas
 * [ ] function for impatient people to leave ( just let them go up until the end of the screen )
 
 

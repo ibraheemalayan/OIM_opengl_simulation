@@ -16,18 +16,18 @@ compile_gui:
 run_gui: compile_gui;
 	@echo "Running GUI..."
 	$(shell export DISPLAY=:0)
-	./bin/standalone_gui
+	./bin/standalone_gui.o
 
 # Debug Standalone GUI
 compile_gui_debug:
 	@echo "Compiling..."
-	gcc ui/ui.c -g -lGL -lGLU -lglut -lm -o bin/standalone_gui.o
+	gcc ui/ui.c -g -lGL -lGLU -lglut -lm -o bin/d_gui.o
 
 
 debug_gui: compile_gui_debug;
 	@echo "Running GUI..."
 	$(shell export DISPLAY=:0)
-	gdb ./bin/standalone_gui.o
+	gdb ./bin/d_gui.o
 
 #	StandAlone CLI
 compile_cli:
@@ -40,6 +40,21 @@ compile_cli:
 run_cli: compile_cli;
 	@echo "Running CLI..."
 	./bin/main.o $(RUN_ARGS)
+
+#	StandAlone CLI
+test_compile_cli:
+	gcc cli/test_parent.c -g -o bin/test1.o
+	gcc cli/test_reader.c -g -o bin/test2.o
+#	gcc cli/standalone_child.c -lm -o bin/standalone_child.o
+
+
+run_test_server: test_compile_cli;
+	@echo "Running Test CLI..."
+	gdb ./bin/test1.o $(RUN_ARGS)
+
+run_test_client: test_compile_cli;
+	@echo "Running Test CLI..."
+	./bin/test2.o $(RUN_ARGS)
 
 # # Debug StandAlone CLI
 # debug_compile_cli:

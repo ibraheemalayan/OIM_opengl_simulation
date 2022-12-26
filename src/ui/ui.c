@@ -1,14 +1,46 @@
-#include "./ui_helper.h"
 #include "./structs.h"
+#include "../include.h"
 #include "./globals.h"
+#include "./hash_table.h"
+#include "./ui_helper.h"
+
+HashTable *ht;
+
+int msg_q_id;
+message *message_queue_buffer;
 
 void paint_and_swap_frame();
 void background();
+int read_message_queue(HashTable *ht);
+void draw_people_in_queues();
 
 void recursive_timed_update(int time);
 
 // void draw_palestine_flag();
 void validate_args(int argc, char *argv[]);
+
+void setup_message_queue()
+{
+
+    key_t key;
+
+    if ((key = ftok("msgq.txt", 'B')) == -1)
+    {
+        perror("ftok, queue not found");
+        exit(1);
+    }
+
+    msg_q_id = msgget(key, 0);
+    if (msg_q_id == -1)
+    {
+        perror("msgget, error getting queue");
+        exit(2);
+    }
+
+    message_queue_buffer = (message *)malloc(sizeof(message));
+
+    printf("\n\nmessage queue: ready to read messages in the UI.\n");
+}
 
 /* Handler for window-repaint event. Call back when the window first appears and
    whenever the window needs to be re-painted. */
@@ -24,6 +56,13 @@ void paint_and_swap_frame()
     // Draw the queues
     draw_queues();
 
+    draw_walls();
+
+    draw_rolling_gate(ROLLING_GATES_X, ROLLING_GATES_Y);
+    draw_rolling_gate(ROLLING_GATES_X, -ROLLING_GATES_Y);
+
+    // draw_rolling_gate(0, -100);
+
     draw_people_in_queues();
 
     glutSwapBuffers(); // Swap the buffers (replace current frame with the new one)
@@ -33,6 +72,77 @@ void validate_args(int argc, char *argv[])
 {
 }
 
+void draw_people_in_queues()
+{
+
+    for (int i = 0; i < ht->size; i++)
+    {
+        if (ht->items[i])
+        {
+            draw_person(ht->items[i]->value);
+            if (ht->overflow_buckets[i])
+            {
+                LinkedList *head = ht->overflow_buckets[i];
+                while (head)
+                {
+                    draw_person(ht->items[i]->value);
+                    head = head->next;
+                }
+            }
+        }
+    }
+}
+void update_people_locations()
+{
+    for (int i = 0; i < ht->size; i++)
+    {
+        if (ht->items[i])
+        {
+            update_person_location(ht->items[i]->value);
+            if (ht->overflow_buckets[i])
+            {
+                LinkedList *head = ht->overflow_buckets[i];
+                while (head)
+                {
+                    update_person_location(ht->items[i]->value);
+                    head = head->next;
+                }
+            }
+        }
+    }
+}
+
+int read_message_queue(HashTable *ht)
+{
+
+    // msg_type set to Zero to read the first message in the queue regarless of it its type
+    if (msgrcv(msg_q_id, message_queue_buffer, sizeof(message), 0, IPC_NOWAIT) == -1)
+    {
+        if (errno == ENOMSG)
+        {
+            return -1;
+        }
+
+        // if the error is not ENOMSG, then it is an error
+        perror("msgrcv");
+        exit(3);
+    }
+
+    printf("received message:\n\n");
+    print_message(message_queue_buffer);
+
+    if (message_queue_buffer->msg_type == PersonEntered)
+    {
+
+        Queue *current_queue = (message_queue_buffer->gender == Male) ? queue_A1 : queue_A2;
+
+        Person *p = create_person(message_queue_buffer->person_pid, message_queue_buffer->index_in_queue, message_queue_buffer->gender, message_queue_buffer->angriness, current_queue);
+
+        ht_insert(ht, p->id, p);
+    }
+
+    return 1;
+}
 void recursive_timed_update(int time)
 {
     if (!simulation_finished)
@@ -41,10 +151,14 @@ void recursive_timed_update(int time)
     }
     glutPostRedisplay(); // marks the current window as needing to be redisplayed
 
-    for (int i = 0; i < people_count; i++)
+    while (read_message_queue(ht) != -1)
     {
-        update_person_location(people[i]);
+        // keep reading messgaes until queue is empty
     }
+
+    update_people_locations();
+
+    rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
 }
 
 void setup_ui(int argc, char **argv)
@@ -66,15 +180,17 @@ void setup_ui(int argc, char **argv)
 void create_people()
 {
 
-    for (int i = 0; i < people_count; i++)
+    for (int i = 1; i < people_count; i++)
     {
 
         gender g = (rand() % 2) ? Male : Female;
         Queue *q = (g == Male) ? queue_A1 : queue_A2;
 
-        people[i] = create_person(i, q->current_people, g, ((float)(rand() % 8)) * 0.1, q);
+        Person *p = create_person(i, q->current_people, g, ((float)(rand() % 8)) * 0.1, q);
 
-        people[i]->destination_coords = get_queue_location_coords_for_index(q, people[i]->index_in_queue);
+        p->destination_coords = get_queue_location_coords_for_index(q, p->index_in_queue);
+
+        ht_insert(ht, p->id, p);
 
         q->current_people++;
     }
@@ -100,7 +216,22 @@ int main(int argc, char **argv)
 
     initialize_queues(queue_A1, queue_A2);
 
+    ht = create_table(CAPACITY);
+
+    setup_message_queue();
+
     create_people();
+
+    // print_search(ht, "1");
+    // print_search(ht, "2");
+    // print_search(ht, "3");
+    // print_search(ht, "Hel");
+    // print_search(ht, "Cau"); // Collision!
+    // print_hashtable(ht);
+    // ht_delete(ht, "1");
+    // ht_delete(ht, "Cau");
+    // print_hashtable(ht);
+    // free_hashtable(ht);
 
     glutMainLoop(); // Enter the event-processing loop
 

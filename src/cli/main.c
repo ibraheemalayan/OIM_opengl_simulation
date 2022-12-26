@@ -496,10 +496,11 @@ void insertToMalesRollingGateQueue() {
     struct personInformation Person;	
     while(1){
 	if (g_numberOfMaelsInTheRollingGateQueue < g_threshold && g_numberOfMalesInAccessQueue > 0){
-        sleep(randomIintegerInRange(3,6));//simulation for dealy time for  moving from Access queue to Rolling gate queue
+
+    sleep(randomIintegerInRange(3,6));//simulation for dealy time for  moving from Access queue to Rolling gate queue
 		Person = dequeueNodeFromQueue(&malesAccessQueue_mutex,&FrontAccessQueueMales, &g_numberOfMalesInAccessQueue);
-        enqueueToQueue(Person, &malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &RearRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
-        updateIndexOfQueue(&FrontAccessQueueMales);//updateIndexOfQueue for AccessQueueMales
+    enqueueToQueue(Person, &malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &RearRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
+    updateIndexOfQueue(&FrontAccessQueueMales);//updateIndexOfQueue for AccessQueueMales
 		//displyRollingGatesQueues();
 		//displyAccessQueues();
 
