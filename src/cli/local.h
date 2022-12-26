@@ -9,20 +9,20 @@
 #include <string.h>
 #include <pthread.h>
 
-struct personInformation {
-        pid_t   personID;       //Process ip
-        char    gender;         //F,M
-        int     officialDocumentNeeded; // "0"birth certificates, "1"travel documents, "2"family reunion documents, "3"ID-related problems
-        int     timerForPatience;
-        int     indexLocationInTheHostQueue;
-        int     tiketNumberInGroupingArea;   
+struct personInformation
+{
+        pid_t personID;             // Process ip
+        char gender;                // F,M
+        int officialDocumentNeeded; // "0"birth certificates, "1"travel documents, "2"family reunion documents, "3"ID-related problems
+        int timerForPatience;
+        int indexLocationInTheHostQueue;
+        int tiketNumberInGroupingArea;
 };
 
-
-struct accessQueueNode {
+struct accessQueueNode
+{
         struct personInformation personInfo;
-        struct accessQueueNode * nextPesron;
-
+        struct accessQueueNode *nextPesron;
 };
 
 #endif
