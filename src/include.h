@@ -19,14 +19,17 @@
 #include <signal.h>
 #include <time.h>
 #include <errno.h>
+#include <sys/msg.h>
+
+#include "std.h"
 
 #define UISIG 7
 
 enum MsgType
 {
-  Enter,
-  Update,
-  Exit,
+  PersonEntered = 1,
+  PersonUpdated,
+  PersonExited,
 };
 
 enum Gender
@@ -37,13 +40,13 @@ enum Gender
 
 enum Location
 {
-  MaleOutsideGatesArea,     // 0
-  FemaleOutsideGatesArea,   // 1
-  MaleMetalDetectorQueue,   // 2
-  FemaleMetalDetectorQueue, // 3
-  MetalDetector,            // 4
-  InnerGroupingArea,        // 5
-  Teller                    // teller 1 will be 6, teller 2 will be 7 and so on
+  MaleOutsideGatesArea = 1,
+  FemaleOutsideGatesArea = 2,
+  MaleMetalDetectorQueue = 3,
+  FemaleMetalDetectorQueue = 4,
+  MetalDetector = 5,
+  InnerGroupingArea = 6,
+  Teller // teller 1 will be 7, teller 2 will be 8 and so on
 };
 
 typedef enum Location Location;
@@ -52,12 +55,14 @@ typedef enum MsgType MsgType;
 
 struct message
 {
-  MsgType msg_type;
+  MsgType msg_type; // first field of the message struct should be the message type
   int person_pid;
   float angriness;
   gender gender;
   int index_in_queue; // index if inside a queue
   Location current_location;
 };
+
+typedef struct message message;
 
 #endif

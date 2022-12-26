@@ -15,6 +15,7 @@ Coordinates get_queue_location_coords_for_next(Queue *queue);
 void update_person_location(Person *person);
 void draw_people_in_queues();
 void draw_queues();
+void setup_message_queue();
 
 Person *create_person(int id, int index, gender gen, float angriess, Queue *current_queue)
 {
@@ -69,15 +70,6 @@ Coordinates get_queue_location_coords_for_index(Queue *queue, int index)
     return coords;
 }
 
-void draw_people_in_queues()
-{
-
-    for (int i = 0; i < people_count; i++)
-    {
-        draw_person(people[i]);
-    }
-}
-
 void update_person_location(Person *person)
 {
 
@@ -116,6 +108,16 @@ void draw_queues()
 {
     draw_rectangle(QUEUE_A1_X_VALUE, QUEUE_A1_Y_VALUE, QUEUE_A1_WIDTH, QUEUE_A1_HEIGHT, 220, 220, 220);
     draw_rectangle(QUEUE_A2_X_VALUE, QUEUE_A2_Y_VALUE, QUEUE_A2_WIDTH, QUEUE_A2_HEIGHT, 220, 220, 220);
+}
+
+void print_message(message *buf)
+{
+    printf("{\n\tmsg_type: %d", buf->msg_type);
+    printf("\n\tperson_pid: %d", buf->person_pid);
+    printf("\n\tangriness: %f", buf->angriness);
+    printf("\n\tgender: %i", buf->gender);
+    printf("\n\tindex_in_queue: %i", buf->index_in_queue);
+    printf("\n\tcurrent_location: %i\n}\n", buf->current_location);
 }
 
 #endif
