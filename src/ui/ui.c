@@ -210,7 +210,7 @@ void setup_ui(int argc, char **argv)
     glutInit(&argc, argv);                       // Initialize GLUT
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE); // for animation
 
-    glutInitWindowSize(1750, 700);               // Set the window's initial width & height
+    glutInitWindowSize(1400, 700);               // Set the window's initial width & height
     glutInitWindowPosition(0, 0);                // Position the window's initial top-left corner of the screen
     glutCreateWindow("OIM Simulation");          // Create a window with the given title
     glutDisplayFunc(paint_and_swap_frame);       // Register display callback handler for window re-paint
@@ -263,24 +263,35 @@ int main(int argc, char **argv)
     metal_detector = (Queue *)malloc(sizeof(Queue));
     inner_grouping_area = (Queue *)malloc(sizeof(Queue));
 
-    initialize_queues(queue_A1, queue_A2, queue_B1, queue_B2, metal_detector, inner_grouping_area);
+    teller_T = (Queue *)malloc(sizeof(Queue));
+    teller_B = (Queue *)malloc(sizeof(Queue));
+    teller_R = (Queue *)malloc(sizeof(Queue));
+    teller_I = (Queue *)malloc(sizeof(Queue));
+
+    teller_T_Q = (Queue *)malloc(sizeof(Queue));
+    teller_B_Q = (Queue *)malloc(sizeof(Queue));
+    teller_R_Q = (Queue *)malloc(sizeof(Queue));
+    teller_I_Q = (Queue *)malloc(sizeof(Queue));
+
+    initialize_queues(
+        queue_A1,
+        queue_A2,
+        queue_B1,
+        queue_B2,
+        metal_detector,
+        inner_grouping_area,
+        teller_T,
+        teller_B,
+        teller_R,
+        teller_I,
+        teller_T_Q,
+        teller_B_Q,
+        teller_R_Q,
+        teller_I_Q);
 
     ht = create_table(CAPACITY);
 
     setup_message_queue();
-
-    // create_random_people();
-
-    // print_search(ht, "1");
-    // print_search(ht, "2");
-    // print_search(ht, "3");
-    // print_search(ht, "Hel");
-    // print_search(ht, "Cau"); // Collision!
-    // print_hashtable(ht);
-    // ht_delete(ht, "1");
-    // ht_delete(ht, "Cau");
-    // print_hashtable(ht);
-    // free_hashtable(ht);
 
     glutMainLoop(); // Enter the event-processing loop
 

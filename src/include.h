@@ -51,16 +51,23 @@ enum Gender
 
 enum Location
 {
+  UNDEFINED = 0,
   MaleOutsideGatesArea = 1,
   FemaleOutsideGatesArea = 2,
   MaleMetalDetectorQueue = 3,
   FemaleMetalDetectorQueue = 4,
   MetalDetector = 5,
   InnerGroupingArea = 6,
-  BxTeller = 7,
-  IxTeller = 8,
-  TxTeller = 9,
-  RxTeller = 10
+  BxTellerQ = 7,
+  IxTellerQ = 8,
+  TxTellerQ = 9,
+  RxTellerQ = 10,
+  BxTeller = 11,
+  IxTeller = 12,
+  TxTeller = 13,
+  RxTeller = 14,
+  LeaveHappy = 15,
+  LeaveUnhappy = 16
 };
 
 typedef enum Location Location;

@@ -10,8 +10,8 @@
 #include <pthread.h>
 #include "../include.h"
 
-#define SLEEP_MIN 100 * 1000 // 100 ms
-#define SLEEP_MAX 800 * 1000 // 800 ms
+#define SLEEP_MIN 50 * 1000  // 30 ms
+#define SLEEP_MAX 300 * 1000 // 100 ms
 
 struct personInformation
 {
@@ -43,12 +43,11 @@ struct parent_message_buf
         parent_child_message_payload payload;
 };
 
-struct PidNode //for addProcessToListThatHaveAllProcessesIDs
+struct PidNode // for addProcessToListThatHaveAllProcessesIDs
 {
-        pid_t personID;   
+        pid_t personID;
         struct PidNode *nextPid;
 };
-
 
 typedef struct parent_message_buf parent_message_buf;
 #endif

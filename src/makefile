@@ -52,8 +52,8 @@ debug_all: compile_all_for_debug;
 
 #	StandAlone CLI
 test_compile_cli:
-	gcc cli/test_parent.c -g -o bin/test1.o
-	gcc cli/test_reader.c -g -o bin/test2.o
+	gcc cli/test_sender.c -g -o bin/test1.o
+#   gcc cli/test_reader.c -g -o bin/test2.o
 #	gcc cli/standalone_child.c -lm -o bin/standalone_child.o
 
 

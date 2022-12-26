@@ -35,7 +35,6 @@ struct personInformation dequeueNodeFromQueue(pthread_mutex_t *mutex, struct acc
 void updateIndexOfQueue(struct accessQueueNode **FrontOfQueue);
 void deleteListOfIDsAndKillAllProcesses();
 
-
 // Enqueue To Queues ->
 void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, struct accessQueueNode **FrontQueue, struct accessQueueNode **RearQueue, int *numberOfPeopleInTheQueue);
 void addProcessIDToListThatHaveAllProcessesIDs(struct PidNode **header, pid_t pid);
@@ -112,12 +111,10 @@ struct accessQueueNode *FrontForIDRelatedProblemsTellerQueue = NULL;
 struct accessQueueNode *RearForIDRelatedProblemsTellerQueue = NULL;
 
 // Pointers to linke list that have all processes , to kill them
-struct PidNode *headerForListHaveAllProcessesIDs= NULL;
-
-
+struct PidNode *headerForListHaveAllProcessesIDs = NULL;
 
 // Threshold
-#define g_threshold 2
+#define g_threshold 8
 
 // number of people that left OIM offices unhappy
 int numberOfPeopleThatLeftOIMofficesUnhappy = 0;
@@ -197,7 +194,7 @@ void printStartSimulationUntil8am()
 
     usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX));
 
-    printAccessQueues();
+    // printAccessQueues();
 
     printf("\n\nNumber of People Arrive Untial 8am : %d \n\n", g_peopleUntil8am);
     reset_stdout();
@@ -306,19 +303,19 @@ Location get_location_enum(struct accessQueueNode *queue_front)
     }
     if (queue_front == FrontForBirthCertificatesTellerQueue)
     {
-        return BxTeller;
+        return BxTellerQ;
     }
     if (queue_front == FrontForTravelDocumentsTellerQueue)
     {
-        return TxTeller;
+        return TxTellerQ;
     }
     if (queue_front == FrontForFamilyReunionDocumentsTellerQueue)
     {
-        return RxTeller;
+        return RxTellerQ;
     }
     if (queue_front == FrontForIDRelatedProblemsTellerQueue)
     {
-        return IxTeller;
+        return IxTellerQ;
     }
 
     printf("Error in get_location_enum");
@@ -396,10 +393,9 @@ int randomIntegerInRange(int lower, int upper)
     return (rand() % (upper - lower + 1)) + lower;
 }
 
-
-
-void addProcessIDToListThatHaveAllProcessesIDs(struct PidNode **header, pid_t pid){
-    //create a new node
+void addProcessIDToListThatHaveAllProcessesIDs(struct PidNode **header, pid_t pid)
+{
+    // create a new node
     struct PidNode *ptr = (struct PidNode *)malloc(sizeof(struct PidNode));
     if (ptr == NULL)
     {
@@ -407,20 +403,18 @@ void addProcessIDToListThatHaveAllProcessesIDs(struct PidNode **header, pid_t pi
         return;
     }
     else
-    {   
-        ptr->personID=pid;
-        ptr->nextPid=*header;
+    {
+        ptr->personID = pid;
+        ptr->nextPid = *header;
         *header = ptr;
-
     }
-  
 }
 
 void deleteListOfIDsAndKillAllProcesses()
 {
     struct PidNode *temp;
 
-    while(headerForListHaveAllProcessesIDs != NULL)
+    while (headerForListHaveAllProcessesIDs != NULL)
     {
         temp = headerForListHaveAllProcessesIDs;
         kill(temp->personID, SIGKILL);
@@ -433,8 +427,6 @@ void deleteListOfIDsAndKillAllProcesses()
     printf("\n\nSUCCESSFULLY DELETED ALL Processes\n\n");
     reset_stdout();
 }
-
-
 
 void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, struct accessQueueNode **FrontQueue, struct accessQueueNode **RearQueue, int *numberOfPeopleInTheQueue)
 {
@@ -449,8 +441,6 @@ void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, 
     else
     {
         person.indexLocationInTheHostQueue = (*numberOfPeopleInTheQueue); // update Index
-        person.currentLocation = get_location_enum(*FrontQueue);
-        notify_person(&person); // Signal the process to move inside the host Queue
         ptr->personInfo = person;
         if ((*FrontQueue) == NULL)
         {
@@ -467,6 +457,18 @@ void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, 
         }
         usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX));
         (*numberOfPeopleInTheQueue)++;
+
+        Location l = get_location_enum(*FrontQueue);
+
+        person.currentLocation = l;
+
+        if (person.currentLocation >= 11) // teller
+        {
+            person.indexLocationInTheHostQueue = 0;
+        }
+        printf("\n\n2 - NQUEU pid: %d, index: %d, location: %d\n", person.personID, person.indexLocationInTheHostQueue, person.currentLocation);
+
+        notify_person(&person); // Signal the process to move inside the host Queue
     }
     pthread_mutex_unlock(mutex);
 }
@@ -487,7 +489,7 @@ struct personInformation dequeueNodeFromQueue(pthread_mutex_t *mutex, struct acc
         temp = (*FrontQueue);
         person = temp->personInfo;
         person.indexLocationInTheHostQueue = -1; // update Index
-        notify_person(&person);                  // Signal the process to move inside the host Queue
+        // notify_person(&person);                  // Signal the process to move inside the host Queue
         (*FrontQueue) = (*FrontQueue)->nextPesron;
         free(temp);
         (*numberOfPeopleInTheQueue)--;
@@ -501,7 +503,7 @@ void notify_person(struct personInformation *person)
 
     parent_message_buf buf;
 
-    buf.pid = person->personID;
+    buf.pid = (long)person->personID;
 
     buf.payload.current_location = person->currentLocation;
     buf.payload.index_in_queue = person->indexLocationInTheHostQueue;
@@ -511,8 +513,6 @@ void notify_person(struct personInformation *person)
         perror("children msgsnd in parent");
         exit(3);
     }
-
-    printf("\n\n>>>> Parent sent message to child %d\n", buf.pid);
 
     kill(person->personID, SIGUSR1);
 }
@@ -614,7 +614,6 @@ void printAccessQueues()
         temp = FrontAccessQueueFemales;
         while (temp)
         {
-            sleep(1); // simulation for time delaying
             printf("%d--%c--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded);
             reset_stdout();
             temp = temp->nextPesron;
@@ -696,9 +695,18 @@ void insertToMalesMetalDetector()
         usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for delay
 
         malePersonInMetalDetectorForMales = dequeueNodeFromQueue(&malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
+
+        malePersonInMetalDetectorForMales.indexLocationInTheHostQueue = 0;
+        malePersonInMetalDetectorForMales.currentLocation = MetalDetector;
+
+        notify_person(&malePersonInMetalDetectorForMales);
+
         printf("\n\nPerson %d Enter the Metal Detector For Males, Gernder %c, Official Document Needed is %s\n\n", malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender, g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
         reset_stdout();
+
+        // random delay in metal detector
         usleep(randomIntegerInRange(SLEEP_MIN * 2, SLEEP_MAX * 2)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
+
         enqueueToQueue(malePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
         updateIndexOfQueue(&FrontRollingGateQueueMales); // updateIndexOfQueue for RollingGateQueueMales
                                                          // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
@@ -713,9 +721,16 @@ void insertToFemalesMetalDetector()
         usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for delay
 
         femalePersonInMetalDetectorForMales = dequeueNodeFromQueue(&femalesRollingGatQueue_mutex, &FrontRollingGateQueueFemales, &g_numberOfFemaelsInTheRollingGateQueue);
+
+        femalePersonInMetalDetectorForMales.indexLocationInTheHostQueue = 0;
+        femalePersonInMetalDetectorForMales.currentLocation = MetalDetector;
+
+        notify_person(&femalePersonInMetalDetectorForMales);
+
         printf("\n\nPerson %d Enter the Metal Detector For Females, Gernder %c, Official Document Needed is %s\n\n", femalePersonInMetalDetectorForMales.personID, femalePersonInMetalDetectorForMales.gender, g_OfficialDocument[femalePersonInMetalDetectorForMales.officialDocumentNeeded]);
         reset_stdout();
-        sleep(randomIntegerInRange(5, 8)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
+        // random delay in metal detector
+        usleep(randomIntegerInRange(SLEEP_MIN * 2, SLEEP_MAX * 2)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
         enqueueToQueue(femalePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
         updateIndexOfQueue(&FrontRollingGateQueueFemales); // updateIndexOfQueue for RollingGateQueueFemales
                                                            // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
@@ -731,6 +746,7 @@ void insertToMetalDetectors()
     int ToFemalesMetalDetector = 1;
     while (1)
     {
+        usleep(100);
         randomChoicFromRollingGates = randomIntegerInRange(ToMalesMetalDetector, ToFemalesMetalDetector);
         if (randomChoicFromRollingGates == 0)
             insertToMalesMetalDetector();
@@ -751,7 +767,7 @@ void insertToTellersQueues()
             Person = dequeueNodeFromQueue(&groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
             printf("\n\nPerson %d leave the Grouping Area Queue, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
             reset_stdout();
-            sleep(randomIntegerInRange(4, 7)); // simulation for delaying while moving to Tellers Queuesas sleep between 5 to 8 seconds
+            usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for delaying while moving to Tellers Queuesas sleep between 5 to 8 seconds
             if (Person.officialDocumentNeeded == 0)
                 enqueueToQueue(Person, &BirthCertificatesQueue_mutex, &FrontForBirthCertificatesTellerQueue, &RearForBirthCertificatesTellerQueue, &g_numberOfpeopleInBirthCertificatesTellerQueue);
             else if (Person.officialDocumentNeeded == 1)
@@ -779,16 +795,31 @@ void insertToBirthCertificatesTeller()
             Person = dequeueNodeFromQueue(&BirthCertificatesQueue_mutex, &FrontForBirthCertificatesTellerQueue, &g_numberOfpeopleInBirthCertificatesTellerQueue);
             printf("\n\nPerson %d achieve the Birth Certificates Teller, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
             reset_stdout();
-            sleep(randomIntegerInRange(10, 15));             // simulation for delay in the Birth Certificates Teller as sleep between 10 to 15 seconds
+
+            Person.currentLocation = BxTeller;
+            Person.indexLocationInTheHostQueue = 0;
+
+            notify_person(&Person);
+
+            usleep(randomIntegerInRange(SLEEP_MIN * 3, SLEEP_MAX * 6)); // simulation for delay in the Birth Certificates Teller as sleep between 10 to 15 seconds
+
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the Birth Certificates Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
             reset_stdout();
             if (leaving_OIM_Status == 0)
             {
                 numberOfPeopleThatLeftOIMofficesSatisfied++;
+                Person.currentLocation = LeaveHappy;
             }
             else
+            {
                 numberOfPeopleThatLeftOIMofficesUnhappy++;
+                Person.currentLocation = LeaveUnhappy;
+            }
+
+            Person.indexLocationInTheHostQueue = 0;
+            notify_person(&Person);
+
             updateIndexOfQueue(&FrontForBirthCertificatesTellerQueue); // updateIndexOfQueue for BirthCertificatesTellerQueue
         }
     }
@@ -807,16 +838,30 @@ void insertToTravelDocumentsTeller()
             Person = dequeueNodeFromQueue(&TravelDocumentsQueue_mutex, &FrontForTravelDocumentsTellerQueue, &g_numberOfpeopleInTravelDocumentsTellerQueue);
             printf("\n\nPerson %d achieve the Travel Documents Teller, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
             reset_stdout();
-            sleep(randomIntegerInRange(10, 15));             // simulation for delay in the Travel Documents Teller as sleep between 10 to 15 seconds
+
+            Person.currentLocation = TxTeller;
+            Person.indexLocationInTheHostQueue = 0;
+
+            notify_person(&Person);
+
+            usleep(randomIntegerInRange(SLEEP_MIN * 3, SLEEP_MAX * 6)); // simulation for delay in the Birth Certificates Teller as sleep between 10 to 15 seconds
+
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the Travel Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
             reset_stdout();
             if (leaving_OIM_Status == 0)
             {
                 numberOfPeopleThatLeftOIMofficesSatisfied++;
+                Person.currentLocation = LeaveHappy;
             }
             else
+            {
                 numberOfPeopleThatLeftOIMofficesUnhappy++;
+                Person.currentLocation = LeaveUnhappy;
+            }
+
+            Person.indexLocationInTheHostQueue = 0;
+            notify_person(&Person);
             updateIndexOfQueue(&FrontForTravelDocumentsTellerQueue); // updateIndexOfQueue for TravelDocumentsTellerQueue
         }
     }
@@ -835,16 +880,32 @@ void insertToFamilyReunionDocumentsTeller()
             Person = dequeueNodeFromQueue(&FamilyReunionDocumentsQueue_mutex, &FrontForFamilyReunionDocumentsTellerQueue, &g_numberOfpeopleInFamilyReunionDocumentsTellerQueue);
             printf("\n\nPerson %d achieve the Family Reunion Documents Teller, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
             reset_stdout();
-            sleep(randomIntegerInRange(10, 15));             // simulation for delay in the Family Reunion Documents Teller as sleep between 10 to 15 seconds
+
+            Person.currentLocation = RxTeller;
+            Person.indexLocationInTheHostQueue = 0;
+
+            notify_person(&Person);
+
+            usleep(randomIntegerInRange(SLEEP_MIN * 3, SLEEP_MAX * 6)); // simulation for delay in the Birth Certificates Teller as sleep between 10 to 15 seconds
+
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the Family Reunion Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
             reset_stdout();
+
             if (leaving_OIM_Status == 0)
             {
                 numberOfPeopleThatLeftOIMofficesSatisfied++;
+                Person.currentLocation = LeaveHappy;
             }
             else
+            {
                 numberOfPeopleThatLeftOIMofficesUnhappy++;
+                Person.currentLocation = LeaveUnhappy;
+            }
+
+            Person.indexLocationInTheHostQueue = 0;
+            notify_person(&Person);
+
             updateIndexOfQueue(&FrontForFamilyReunionDocumentsTellerQueue); // updateIndexOfQueue for FamilyReunionDocumentsTellerQueue
         }
     }
@@ -863,16 +924,31 @@ void insertToIDRelatedProblemsTeller()
             Person = dequeueNodeFromQueue(&IDRelatedProblemsQueue_mutex, &FrontForIDRelatedProblemsTellerQueue, &g_numberOfpeopleInIDRelatedProblemsTellerQueue);
             printf("\n\nPerson %d achieve the ID Related Problems Teller, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
             reset_stdout();
-            sleep(randomIntegerInRange(10, 15));             // simulation for delay in the ID Related Problems Teller as sleep between 10 to 15 seconds
+
+            Person.currentLocation = IxTeller;
+            Person.indexLocationInTheHostQueue = 0;
+
+            notify_person(&Person);
+
+            usleep(randomIntegerInRange(SLEEP_MIN * 3, SLEEP_MAX * 6)); // simulation for delay in the Birth Certificates Teller as sleep between 10 to 15 seconds
+
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the ID Related Problems Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
             reset_stdout();
             if (leaving_OIM_Status == 0)
             {
                 numberOfPeopleThatLeftOIMofficesSatisfied++;
+                Person.currentLocation = LeaveHappy;
             }
             else
+            {
                 numberOfPeopleThatLeftOIMofficesUnhappy++;
+                Person.currentLocation = LeaveUnhappy;
+            }
+
+            Person.indexLocationInTheHostQueue = 0;
+            notify_person(&Person);
+
             updateIndexOfQueue(&FrontForIDRelatedProblemsTellerQueue); // updateIndexOfQueue for IDRelatedProblemsTellerQueue
         }
     }
@@ -912,13 +988,13 @@ void create_people(void *numberOfPeople)
         {
             // Print the info for the arrival person:
             person.personID = pid;
-            usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for time delaying for arrival time
+            usleep(randomIntegerInRange(SLEEP_MIN / 3, SLEEP_MAX / 3)); // simulation for time delaying for arrival time
             if (person.gender == 'M')
                 enqueueToQueue(person, &malesAccessQueue_mutex, &FrontAccessQueueMales, &RearAccessQueueMales, &g_numberOfMalesInAccessQueue);
             else
                 enqueueToQueue(person, &femalesAccessQueue_mutex, &FrontAccessQueueFemales, &RearAccessQueueFemales, &g_numberOfFemalesInAccessQueue);
-            
-            addProcessIDToListThatHaveAllProcessesIDs(&headerForListHaveAllProcessesIDs, pid);// add to ListHaveAllProcessesIDs
+
+            addProcessIDToListThatHaveAllProcessesIDs(&headerForListHaveAllProcessesIDs, pid); // add to ListHaveAllProcessesIDs
         }
         else if (pid == 0)
         {
@@ -1016,7 +1092,7 @@ void create_and_setup_message_queues()
         exit(1);
     }
 
-    ui_msgq_id = msgget(children_queue_key, 0666 | IPC_CREAT);
+    ui_msgq_id = msgget(ui_queue_key, 0666 | IPC_CREAT);
     if (ui_msgq_id == -1)
     {
         perror("msgget ui queue");
@@ -1024,7 +1100,7 @@ void create_and_setup_message_queues()
         exit(2);
     }
 
-    children_msgq_id = msgget(ui_queue_key, 0666 | IPC_CREAT);
+    children_msgq_id = msgget(children_queue_key, 0666 | IPC_CREAT);
     if (children_msgq_id == -1)
     {
         perror("msgget children queue");
@@ -1067,9 +1143,9 @@ void create_and_setup_message_queues()
 
 void clean_up()
 {
-    
+
     if (gui_pid != 0)
-    {   
+    {
         kill(gui_pid, SIGKILL);
         waitpid(gui_pid, NULL, 0);
     }
@@ -1084,7 +1160,6 @@ void clean_up()
     // remove the queue file
     remove("ui_queue.bin");
     remove("children_queue.bin");
-    
 }
 
 void interrupt_sig_handler(int sig)

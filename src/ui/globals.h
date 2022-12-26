@@ -5,7 +5,20 @@
 #include "./structs.h"
 #include "./hash_table.h"
 
-Queue *queue_A1, *queue_A2, *queue_B1, *queue_B2, *metal_detector, *inner_grouping_area;
+Queue *queue_A1,
+    *queue_A2,
+    *queue_B1,
+    *queue_B2,
+    *metal_detector,
+    *inner_grouping_area,
+    *teller_R,
+    *teller_I,
+    *teller_B,
+    *teller_T,
+    *teller_R_Q,
+    *teller_I_Q,
+    *teller_B_Q,
+    *teller_T_Q;
 
 // Person *people[500];
 

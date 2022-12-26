@@ -39,7 +39,15 @@ void initialize_queues(
     Queue *queue_B1,
     Queue *queue_B2,
     Queue *metal_detector,
-    Queue *inner_grouping_area)
+    Queue *inner_grouping_area,
+    Queue *teller_T,
+    Queue *teller_B,
+    Queue *teller_R,
+    Queue *teller_I,
+    Queue *teller_T_Q,
+    Queue *teller_B_Q,
+    Queue *teller_R_Q,
+    Queue *teller_I_Q)
 {
     queue_A1->coords.x = QUEUE_A1_X_VALUE;
     queue_A1->coords.y = QUEUE_A1_Y_VALUE;
@@ -65,7 +73,7 @@ void initialize_queues(
     queue_B2->height = QUEUE_B_HEIGHT;
     queue_B2->current_people = 0;
 
-    metal_detector->coords.x = METAL_DETECTOR_X;
+    metal_detector->coords.x = METAL_DETECTOR_X - 20;
     metal_detector->coords.y = 0;
     metal_detector->width = 50;
     metal_detector->height = 50;
@@ -76,6 +84,56 @@ void initialize_queues(
     inner_grouping_area->width = INNER_GROUPING_AREA_WIDTH;
     inner_grouping_area->height = INNER_GROUPING_AREA_HEIGHT;
     inner_grouping_area->current_people = 0;
+
+    teller_B->coords.x = TELLER_X_VALUE;
+    teller_B->coords.y = TELLER_Bx_Y_VALUE;
+    teller_B->width = TELLER_WIDTH;
+    teller_B->height = TELLER_HEIGHT;
+    teller_B->current_people = 0;
+
+    teller_I->coords.x = TELLER_X_VALUE;
+    teller_I->coords.y = TELLER_Ix_Y_VALUE;
+    teller_I->width = TELLER_WIDTH;
+    teller_I->height = TELLER_HEIGHT;
+    teller_I->current_people = 0;
+
+    teller_R->coords.x = TELLER_X_VALUE;
+    teller_R->coords.y = TELLER_Rx_Y_VALUE;
+    teller_R->width = TELLER_WIDTH;
+    teller_R->height = TELLER_HEIGHT;
+    teller_R->current_people = 0;
+
+    teller_T->coords.x = TELLER_X_VALUE;
+    teller_T->coords.y = TELLER_Tx_Y_VALUE;
+    teller_T->width = TELLER_WIDTH;
+    teller_T->height = TELLER_HEIGHT;
+    teller_T->current_people = 0;
+
+    //
+
+    teller_B_Q->coords.x = TELLER_QUEUE_X_VALUE;
+    teller_B_Q->coords.y = TELLER_Bx_Y_VALUE;
+    teller_B_Q->width = TELLER_QUEUE_WIDTH;
+    teller_B_Q->height = TELLER_QUEUE_HEIGHT;
+    teller_B_Q->current_people = 0;
+
+    teller_I_Q->coords.x = TELLER_QUEUE_X_VALUE;
+    teller_I_Q->coords.y = TELLER_Ix_Y_VALUE;
+    teller_I_Q->width = TELLER_QUEUE_WIDTH;
+    teller_I_Q->height = TELLER_QUEUE_HEIGHT;
+    teller_I_Q->current_people = 0;
+
+    teller_R_Q->coords.x = TELLER_QUEUE_X_VALUE;
+    teller_R_Q->coords.y = TELLER_Rx_Y_VALUE;
+    teller_R_Q->width = TELLER_QUEUE_WIDTH;
+    teller_R_Q->height = TELLER_QUEUE_HEIGHT;
+    teller_R_Q->current_people = 0;
+
+    teller_T_Q->coords.x = TELLER_QUEUE_X_VALUE;
+    teller_T_Q->coords.y = TELLER_Tx_Y_VALUE;
+    teller_T_Q->width = TELLER_QUEUE_WIDTH;
+    teller_T_Q->height = TELLER_QUEUE_HEIGHT;
+    teller_T_Q->current_people = 0;
 }
 
 Coordinates get_queue_location_coords_for_next(Queue *queue)
@@ -92,8 +150,8 @@ Coordinates get_queue_location_coords_for_index(Queue *queue, int index)
 
     Coordinates coords;
 
-    coords.y = queue->coords.y + 30 + row * PADDING_BETWEEN_PEOPLE;
-    coords.x = queue->coords.x + 30 + column * PADDING_BETWEEN_PEOPLE;
+    coords.y = queue->coords.y - 30 + queue->height - row * PADDING_BETWEEN_PEOPLE;
+    coords.x = queue->coords.x - 30 + queue->width - column * PADDING_BETWEEN_PEOPLE;
 
     return coords;
 }
@@ -141,6 +199,16 @@ void draw_queues()
     draw_rectangle(QUEUE_B_X_VALUE, QUEUE_B2_Y_VALUE, QUEUE_B_WIDTH, QUEUE_B_HEIGHT, 220, 220, 220);
 
     draw_rectangle(INNER_GROUPING_AREA_X_VALUE, INNER_GROUPING_AREA_Y_VALUE, INNER_GROUPING_AREA_WIDTH, INNER_GROUPING_AREA_HEIGHT, 220, 220, 220);
+
+    draw_rectangle(TELLER_X_VALUE, TELLER_Bx_Y_VALUE, TELLER_WIDTH, TELLER_HEIGHT, 220, 0, 220);
+    draw_rectangle(TELLER_X_VALUE, TELLER_Ix_Y_VALUE, TELLER_WIDTH, TELLER_HEIGHT, 220, 0, 220);
+    draw_rectangle(TELLER_X_VALUE, TELLER_Tx_Y_VALUE, TELLER_WIDTH, TELLER_HEIGHT, 220, 0, 220);
+    draw_rectangle(TELLER_X_VALUE, TELLER_Rx_Y_VALUE, TELLER_WIDTH, TELLER_HEIGHT, 220, 0, 220);
+
+    draw_rectangle(TELLER_QUEUE_X_VALUE, TELLER_Bx_Y_VALUE, TELLER_QUEUE_WIDTH, TELLER_QUEUE_HEIGHT, 220, 200, 220);
+    draw_rectangle(TELLER_QUEUE_X_VALUE, TELLER_Ix_Y_VALUE, TELLER_QUEUE_WIDTH, TELLER_QUEUE_HEIGHT, 220, 200, 220);
+    draw_rectangle(TELLER_QUEUE_X_VALUE, TELLER_Tx_Y_VALUE, TELLER_QUEUE_WIDTH, TELLER_QUEUE_HEIGHT, 220, 200, 220);
+    draw_rectangle(TELLER_QUEUE_X_VALUE, TELLER_Rx_Y_VALUE, TELLER_QUEUE_WIDTH, TELLER_QUEUE_HEIGHT, 220, 200, 220);
 }
 
 void print_message(message_payload *buf)
@@ -169,6 +237,23 @@ Queue *get_proper_queue_pointer(Location current_location)
         return metal_detector;
     case InnerGroupingArea:
         return inner_grouping_area;
+    case BxTellerQ:
+        return teller_B_Q;
+    case TxTellerQ:
+        return teller_T_Q;
+    case IxTellerQ:
+        return teller_I_Q;
+    case RxTellerQ:
+        return teller_R_Q;
+    case BxTeller:
+        return teller_B;
+    case TxTeller:
+        return teller_T;
+    case IxTeller:
+        return teller_I;
+    case RxTeller:
+        return teller_R;
+
     default:
         break;
     }

@@ -13,9 +13,11 @@ void update_ui(MsgType msg_type);
 
 #define MAX_PATIENCE_TIME 200
 #define MIN_PATIENCE_TIME 50
-#define PATIENCE_STEP 1
+#define PATIENCE_STEP 2
 #define FIRST_ALARM_FACTOR 1000   // 10 ms
-#define ALARM_INTERVAL 400 * 1000 // 400 ms
+#define ALARM_INTERVAL 400 * 1000 // 4000 ms
+
+#define init_random() (srand(time(NULL) ^ (getpid() << 16)))
 
 int ui_msgq_id;
 int parent_msgq_id;
@@ -24,6 +26,8 @@ float my_max_patience;
 float waited_time = 0.0f;
 
 pid_t my_pid;
+
+int left = 0;
 
 int index_in_queue; // index if inside a queue
 Location current_location;
@@ -81,6 +85,7 @@ void validate_args(int argc, char *argv[])
 
 void main(int argc, char *argv[])
 {
+    init_random();
 
     validate_args(argc, argv);
 
@@ -148,7 +153,7 @@ void setup_message_queue()
     }
 
     parent_msgq_id = msgget(parent_q_key, 0);
-    if (ui_msgq_id == -1)
+    if (parent_msgq_id == -1)
     {
         perror("msgget, error getting queue");
         exit(2);
@@ -159,29 +164,78 @@ void handle_officer_order_signal(int the_sig)
 {
     parent_message_buf message_queue_buffer;
 
-    // read messages intended for this child
-    if (msgrcv(parent_msgq_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), my_pid, MSG_NOERROR) == -1)
-    {
-        if (errno == ENOMSG)
-        {
-            red_stdout();
-            printf("No message of type %d in the queue, although the parent sent a signal", my_pid);
-            reset_stdout();
-            return;
-            // exit(2); // FIXME
-        }
+    int retries = 0;
 
-        // if the error is not ENOMSG, then it is an error
-        perror("msgrcv");
-        exit(3);
+    while (1)
+    {
+        // Try to receive message
+        errno = 0;
+        int status = msgrcv(parent_msgq_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), (long)my_pid, IPC_NOWAIT | MSG_NOERROR);
+
+        if (status < 0)
+        {
+            if (errno == EINTR)
+            {
+                usleep(100);
+                continue; // try again
+            }
+
+            if (errno == ENOMSG)
+            {
+                if (retries++ < 10)
+                {
+                    usleep(1000);
+                    continue; // try again
+                }
+
+                red_stdout();
+                printf("No message of type %d in the queue, although the parent sent a signal", my_pid);
+                reset_stdout();
+                return;
+                // exit(2); // FIXME
+            }
+
+            // if the error is not ENOMSG, then it is an error
+            perror("msgrcv in child");
+            exit(3);
+        }
+        break;
     }
 
-    green_stdout();
-    printf("A message of type %d was received", my_pid);
-    reset_stdout();
+    // green_stdout();
+    // printf("A message of type %d was received", my_pid);
+    // reset_stdout();
 
     index_in_queue = message_queue_buffer.payload.index_in_queue;
+
+    if (current_location > message_queue_buffer.payload.current_location)
+    {
+        return;
+    }
+
     current_location = message_queue_buffer.payload.current_location;
+
+    if (current_location == LeaveHappy)
+    {
+        red_stdout();
+        printf("\n\nPerson %d has left happy ", my_pid);
+        reset_stdout();
+
+        update_ui(PersonExitedSatisfied);
+
+        exit(0);
+    }
+
+    if (current_location == LeaveUnhappy)
+    {
+        red_stdout();
+        printf("\n\nPerson %d has left the teller unsatisfied", my_pid);
+        reset_stdout();
+
+        update_ui(PersonExitedUnsatisfied);
+
+        exit(0);
+    }
 
     update_ui(PersonUpdated);
 }
@@ -206,7 +260,6 @@ void handle_alarm_signal(int the_sig)
 
 int randomIntegerInRange(int lower, int upper)
 {
-    srand(time(NULL)); // randomize seed
     return (rand() % (upper - lower + 1)) + lower;
 }
 

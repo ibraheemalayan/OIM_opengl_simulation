@@ -156,10 +156,10 @@ void reshape(int width, int height)
 
     // regardless the width & the height, do not change the viewport
 
-    glViewport(0, 0, 1750, 700);
+    glViewport(0, 0, 1400, 700);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(-1250, 1250, -500, 500); // left, right, bottom, top
+    gluOrtho2D(-1250, 750, -500, 500); // left, right, bottom, top
 
     glMatrixMode(GL_MODELVIEW);
 }
