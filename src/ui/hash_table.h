@@ -156,7 +156,7 @@ Ht_item *create_item(int key, Person *value)
 HashTable *create_table(int size)
 {
     // Creates a new HashTable
-    HashTable *table = (HashTable *)malloc(sizeof(HashTable) + sizeof(Ht_item *) * size);
+    HashTable *table = (HashTable *)malloc(sizeof(HashTable) + sizeof(Ht_item) * size);
     table->size = size;
     table->count = 0;
 

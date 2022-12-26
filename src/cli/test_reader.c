@@ -4,17 +4,17 @@
 void setup_message_queue();
 void read_mock_messages();
 
-message buf;
+message_buf buf;
 int msg_q_id;
 
-void print_message(message *msg)
+void print_message()
 {
-    printf("{\n\tmsg_type: %d", buf.msg_type);
-    printf("\n\tperson_pid: %d", buf.person_pid);
-    printf("\n\tangriness: %f", buf.angriness);
-    printf("\n\tgender: %i", buf.gender);
-    printf("\n\tindex_in_queue: %i", buf.index_in_queue);
-    printf("\n\tcurrent_location: %i\n}\n", buf.current_location);
+    printf("{\n\tmsg_type: %ld", buf.payload.msg_type);
+    printf("\n\tperson_pid: %d", buf.payload.person_pid);
+    printf("\n\tangriness: %f", buf.payload.angriness);
+    printf("\n\tgender: %i", buf.payload.gender);
+    printf("\n\tindex_in_queue: %i", buf.payload.index_in_queue);
+    printf("\n\tcurrent_location: %i\n}\n", buf.payload.current_location);
 }
 
 void setup_message_queue()
@@ -42,7 +42,7 @@ void read_mock_messages()
 {
 
     // msg_type set to Zero to read the first message in the queue regarless of it its type
-    if (msgrcv(msg_q_id, &buf, sizeof(buf), 0, IPC_NOWAIT) == -1)
+    if (msgrcv(msg_q_id, &buf, sizeof(buf.payload), PERSON, IPC_NOWAIT) == -1)
     {
         if (errno == ENOMSG)
         {
