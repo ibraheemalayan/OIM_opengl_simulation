@@ -10,6 +10,9 @@
 #include <pthread.h>
 #include "../include.h"
 
+#define SLEEP_MIN 100 * 1000 // 100 ms
+#define SLEEP_MAX 800 * 1000 // 800 ms
+
 struct personInformation
 {
         pid_t personID;                      // Process ip

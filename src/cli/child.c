@@ -13,7 +13,7 @@ void update_ui(MsgType msg_type);
 
 #define MAX_PATIENCE_TIME 100
 #define MIN_PATIENCE_TIME 20
-#define PATIENCE_STEP 1
+#define PATIENCE_STEP 2
 #define FIRST_ALARM_FACTOR 1000   // 10 ms
 #define ALARM_INTERVAL 400 * 1000 // 400 ms
 

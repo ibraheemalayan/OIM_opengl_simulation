@@ -194,7 +194,7 @@ void start_simulation()
     printf("\n\nIt's 8am:\n\n");
     reset_stdout();
 
-    sleep(randomIntegerInRange(3, 6)); // simulation for time delaying
+    usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX));
 
     printAccessQueues();
 
@@ -202,7 +202,7 @@ void start_simulation()
     reset_stdout();
 
     // People Start Entering the Rolling Gate Dependent on their Gender
-    sleep(randomIntegerInRange(3, 6)); // simulation for time delaying
+    usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX));
     printf("\n\nPeople Start Entering the Rolling Gate Dependes on their Gender >>>>>>\n\n");
 
     /* create a new thread that will keep move nodes from males access queue to Rolling Gate Queue "Males" */
@@ -367,7 +367,7 @@ void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, 
             (*RearQueue) = ptr;
             (*RearQueue)->nextPesron = NULL;
         }
-        sleep(randomIntegerInRange(3, 6)); // simulation for time delaying
+        usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX));
         (*numberOfPeopleInTheQueue)++;
     }
     pthread_mutex_unlock(mutex);
@@ -564,7 +564,7 @@ void create_people()
             // Print the info for the arrival person:
             person.personID = pid;
             printInfoForArrivalPerson(person);
-            sleep(randomIntegerInRange(minShiftingInArrivalTime, maxShiftingInArrivalTime)); // simulation for time delaying for arrival time
+            usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for time delaying for arrival time
             if (person.gender == 'M')
                 enqueueToQueue(person, &malesAccessQueue_mutex, &FrontAccessQueueMales, &RearAccessQueueMales, &g_numberOfMalesInAccessQueue);
             else
@@ -606,7 +606,7 @@ void insertToMalesRollingGateQueue()
         if (g_numberOfMaelsInTheRollingGateQueue < g_threshold && g_numberOfMalesInAccessQueue > 0)
         {
 
-            sleep(randomIntegerInRange(3, 6)); // simulation for dealy time for  moving from Access queue to Rolling gate queue
+            usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for dealy time for  moving from Access queue to Rolling gate queue
             Person = dequeueNodeFromQueue(&malesAccessQueue_mutex, &FrontAccessQueueMales, &g_numberOfMalesInAccessQueue);
             enqueueToQueue(Person, &malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &RearRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
             updateIndexOfQueue(&FrontAccessQueueMales); // updateIndexOfQueue for AccessQueueMales
@@ -623,7 +623,7 @@ void insertToFemalesRollingGateQueue()
     {
         if (g_numberOfFemaelsInTheRollingGateQueue < g_threshold && g_numberOfFemalesInAccessQueue > 0)
         {
-            sleep(randomIntegerInRange(3, 6)); // simulation for dealy time for  moving from Access queue to Rolling gate queue
+            usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for dealy time for  moving from Access queue to Rolling gate queue
             Person = dequeueNodeFromQueue(&femalesAccessQueue_mutex, &FrontAccessQueueFemales, &g_numberOfFemalesInAccessQueue);
             enqueueToQueue(Person, &femalesRollingGatQueue_mutex, &FrontRollingGateQueueFemales, &RearRollingGateQueueFemales, &g_numberOfFemaelsInTheRollingGateQueue);
             updateIndexOfQueue(&FrontAccessQueueFemales); // updateIndexOfQueue for AccessQueueFemales
@@ -638,12 +638,12 @@ void insertToMalesMetalDetector()
     struct personInformation malePersonInMetalDetectorForMales;
     if (g_numberOfMaelsInTheRollingGateQueue > 0)
     {
-        sleep(randomIntegerInRange(3, 6)); // simulation for delay
+        usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for delay
 
         malePersonInMetalDetectorForMales = dequeueNodeFromQueue(&malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
         printf("\n\nPerson %d Enter the Metal Detector For Males, Gernder %c, Official Document Needed is %s\n\n", malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender, g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
         reset_stdout();
-        sleep(randomIntegerInRange(5, 8)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
+        usleep(randomIntegerInRange(SLEEP_MIN * 2, SLEEP_MAX * 2)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
         enqueueToQueue(malePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
         updateIndexOfQueue(&FrontRollingGateQueueMales); // updateIndexOfQueue for RollingGateQueueMales
                                                          // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
@@ -655,7 +655,7 @@ void insertToFemalesMetalDetector()
     struct personInformation femalePersonInMetalDetectorForMales;
     if (g_numberOfFemaelsInTheRollingGateQueue > 0)
     {
-        sleep(randomIntegerInRange(3, 6)); // simulation for delay
+        usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for delay
 
         femalePersonInMetalDetectorForMales = dequeueNodeFromQueue(&femalesRollingGatQueue_mutex, &FrontRollingGateQueueFemales, &g_numberOfFemaelsInTheRollingGateQueue);
         printf("\n\nPerson %d Enter the Metal Detector For Females, Gernder %c, Official Document Needed is %s\n\n", femalePersonInMetalDetectorForMales.personID, femalePersonInMetalDetectorForMales.gender, g_OfficialDocument[femalePersonInMetalDetectorForMales.officialDocumentNeeded]);
@@ -692,7 +692,7 @@ void insertToTellersQueues()
     {
         if (g_numberOfpeopleInGroupingArea > 0)
         {
-            sleep(randomIntegerInRange(3, 6)); // simulation for delay
+            usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for delay
             Person = dequeueNodeFromQueue(&groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
             printf("\n\nPerson %d leave the Grouping Area Queue, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
             reset_stdout();
@@ -851,7 +851,7 @@ void insertToAccessQueuesAfter8am()
             // Print the info for the arrival person:
             person.personID = pid;
             printInfoForArrivalPerson(person);
-            sleep(randomIntegerInRange(minShiftingInArrivalTime, maxShiftingInArrivalTime)); // simulation for time delaying for arrival time
+            usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for time delaying for arrival time
             if (person.gender == 'M')
                 enqueueToQueue(person, &malesAccessQueue_mutex, &FrontAccessQueueMales, &RearAccessQueueMales, &g_numberOfMalesInAccessQueue);
             else
