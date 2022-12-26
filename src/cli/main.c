@@ -14,10 +14,13 @@ void creatPeople();
 
 //Dequeue from Queues -> 
 struct personInformation dequeueNodeFromQueue(pthread_mutex_t *mutex, struct accessQueueNode **FrontQueue, int *numberOfPeopleInTheQueue);
-void updateIndexOfQueue(struct accessQueueNode * FrontOfQueue);
+void updateIndexOfQueue(struct accessQueueNode **FrontOfQueue);
 
 //Enqueue To Queues ->
 void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, struct accessQueueNode **FrontQueue, struct accessQueueNode **RearQueue, int *numberOfPeopleInTheQueue);
+
+//remove Node From Queue Because Of Impatience
+void removeNodeFromQueueCauseOfImpatience(struct accessQueueNode **FrontQueue, pid_t personIDKey);
 
 //Threads
 void insertToMalesRollingGateQueue();
@@ -315,9 +318,39 @@ struct personInformation dequeueNodeFromQueue(pthread_mutex_t *mutex, struct acc
     
 }
 
-void updateIndexOfQueue(struct accessQueueNode * FrontOfQueue){
-    struct accessQueueNode * tmp;
-    tmp = FrontOfQueue;
+
+void removeNodeFromQueueCauseOfImpatience(struct accessQueueNode **FrontQueue, pid_t personIDKey){
+
+    // Store head node
+    struct accessQueueNode *temp = *FrontQueue, *prev;
+ 
+    // If head node itself holds the key to be deleted
+    if (temp != NULL && temp->personInfo.personID == personIDKey) {
+        (*FrontQueue) = temp->nextPesron; // Changed head
+        free(temp); // free old head
+        return;
+    }
+ 
+    // Search for the personIDKey to be deleted, keep track of the
+    // previous node as we need to change 'prev->nextPesron'
+    while (temp != NULL && temp->personInfo.personID != personIDKey){
+        prev = temp;
+        temp = temp->nextPesron;
+    }
+ 
+    // If personIDKey was not present in linked list
+    if (temp == NULL)
+        return;
+ 
+    // Unlink the node from linked list
+    prev->nextPesron = temp->nextPesron;
+ 
+    free(temp); // Free memory
+
+}
+
+void updateIndexOfQueue(struct accessQueueNode **FrontOfQueue){
+    struct accessQueueNode *tmp = *FrontOfQueue;
     while (tmp != NULL)
     {
        tmp->personInfo.indexLocationInTheHostQueue=tmp->personInfo.indexLocationInTheHostQueue-1;
@@ -465,7 +498,7 @@ void insertToMalesRollingGateQueue() {
         sleep(randomIintegerInRange(3,6));//simulation for dealy time for  moving from Access queue to Rolling gate queue
 		Person = dequeueNodeFromQueue(&malesAccessQueue_mutex,&FrontAccessQueueMales, &g_numberOfMalesInAccessQueue);
         enqueueToQueue(Person, &malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &RearRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
-        updateIndexOfQueue(FrontAccessQueueMales);//updateIndexOfQueue for AccessQueueMales
+        updateIndexOfQueue(&FrontAccessQueueMales);//updateIndexOfQueue for AccessQueueMales
 		//displyRollingGatesQueues();
 		//displyAccessQueues();
 
@@ -481,7 +514,7 @@ void insertToFemalesRollingGateQueue() {
                 sleep(randomIintegerInRange(3,6));//simulation for dealy time for  moving from Access queue to Rolling gate queue
                 Person = dequeueNodeFromQueue(&femalesAccessQueue_mutex,&FrontAccessQueueFemales, &g_numberOfFemalesInAccessQueue);
                 enqueueToQueue(Person, &femalesRollingGatQueue_mutex, &FrontRollingGateQueueFemales, &RearRollingGateQueueFemales, &g_numberOfFemaelsInTheRollingGateQueue);
-                updateIndexOfQueue(FrontAccessQueueFemales);//updateIndexOfQueue for AccessQueueFemales
+                updateIndexOfQueue(&FrontAccessQueueFemales);//updateIndexOfQueue for AccessQueueFemales
                 //displyRollingGatesQueues();
                 //displyAccessQueues();
 
@@ -499,7 +532,7 @@ void insertToMalesMetalDetector(){
 		fflush(stdout);
 		sleep(randomIintegerInRange(5,8));//simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
 		enqueueToQueue(malePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
-        updateIndexOfQueue(FrontRollingGateQueueMales);//updateIndexOfQueue for RollingGateQueueMales
+        updateIndexOfQueue(&FrontRollingGateQueueMales);//updateIndexOfQueue for RollingGateQueueMales
 		//printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
 				
 	}
@@ -517,7 +550,7 @@ void insertToFemalesMetalDetector(){
             fflush(stdout);
 		    sleep(randomIintegerInRange(5,8));//simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
 		    enqueueToQueue(femalePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
-            updateIndexOfQueue(FrontRollingGateQueueFemales);//updateIndexOfQueue for RollingGateQueueFemales
+            updateIndexOfQueue(&FrontRollingGateQueueFemales);//updateIndexOfQueue for RollingGateQueueFemales
             //printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
 		    //fflush(stdout);
         }
@@ -543,7 +576,7 @@ void insertToTellersQueues(){
 		else if (Person.officialDocumentNeeded == 3)
 			enqueueToQueue(Person, &IDRelatedProblemsQueue_mutex, &FrontForIDRelatedProblemsTellerQueue, &RearForIDRelatedProblemsTellerQueue, &g_numberOfpeopleInIDRelatedProblemsTellerQueue);
 		
-        updateIndexOfQueue(FrontForGroupingAreaQueue);//updateIndexOfQueue for GroupingAreaQueue
+        updateIndexOfQueue(&FrontForGroupingAreaQueue);//updateIndexOfQueue for GroupingAreaQueue
 	}
   }
 }
@@ -562,7 +595,7 @@ void insertToBirthCertificatesTeller(){
 		        leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
                 printf("Person %d leave the Birth Certificates Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
                 fflush(stdout);
-                updateIndexOfQueue(FrontForBirthCertificatesTellerQueue);//updateIndexOfQueue for BirthCertificatesTellerQueue
+                updateIndexOfQueue(&FrontForBirthCertificatesTellerQueue);//updateIndexOfQueue for BirthCertificatesTellerQueue
         }
   }
 }
@@ -581,7 +614,7 @@ void insertToTravelDocumentsTeller(){
                 leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
                 printf("Person %d leave the Travel Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
                 fflush(stdout);
-                updateIndexOfQueue(FrontForTravelDocumentsTellerQueue);//updateIndexOfQueue for TravelDocumentsTellerQueue
+                updateIndexOfQueue(&FrontForTravelDocumentsTellerQueue);//updateIndexOfQueue for TravelDocumentsTellerQueue
         }
 
   }
@@ -602,7 +635,7 @@ void insertToFamilyReunionDocumentsTeller(){
                 leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
                 printf("Person %d leave the Family Reunion Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
                 fflush(stdout);
-                updateIndexOfQueue(FrontForFamilyReunionDocumentsTellerQueue);//updateIndexOfQueue for FamilyReunionDocumentsTellerQueue
+                updateIndexOfQueue(&FrontForFamilyReunionDocumentsTellerQueue);//updateIndexOfQueue for FamilyReunionDocumentsTellerQueue
         }
 
   }
@@ -623,7 +656,7 @@ void insertToIDRelatedProblemsTeller(){
                 leaving_OIM_Status = randomIintegerInRange(0,1);// 0:Satisfied ,  1:Unhappy
                 printf("Person %d leave the ID Related Problems Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n",Person.personID, Person.gender,g_OfficialDocument[Person.officialDocumentNeeded],g_leaving_OIM_Status[leaving_OIM_Status]);
                 fflush(stdout);
-                updateIndexOfQueue(FrontForIDRelatedProblemsTellerQueue);//updateIndexOfQueue for IDRelatedProblemsTellerQueue
+                updateIndexOfQueue(&FrontForIDRelatedProblemsTellerQueue);//updateIndexOfQueue for IDRelatedProblemsTellerQueue
         }
 
   }

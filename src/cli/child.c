@@ -70,6 +70,6 @@ int randomIintegerInRange(int lower,int upper)
 }
 
 void printInfoForChildPerson(char *argv[]){
-	printf("\n\nIn Child: Person %s ,Official Document Needed is %s, Gernder %s, timerForPatience %s,tiketNumberInGroupingArea %s, IndexOfTheProcessInsideTheHostQueue %s \n\n",argv[1], argv[2], argv[3], argv[4],argv[5],argv[6]);
+	printf("\n\nIn Child: Person %s ,Official Document Needed is %s, Gernder %s, timerForPatience %s,tiketNumberInGroupingArea %s, IndexOfTheProcessInsideTheHostQueue %s\n\n",argv[1], argv[2], argv[3], argv[4],argv[5],argv[6]);
 	fflush(stdout);
 }
