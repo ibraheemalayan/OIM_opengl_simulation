@@ -6,10 +6,12 @@
 // 1. Fork & Exec UI | DONE
 // 2. Rename symbols that has Typos
 // 3. Color output & replace flush with reset_stdout
+// 4. Threads performance
 // 4. Clean Up | DONE
 // 5. Why signals are used for children | DONE
 
 //..........Fuctions........................
+void printStartSimulationUntil8am();
 void readInputFile();
 int randomIntegerInRange(int lower, int upper);
 void printAccessQueues();
@@ -27,7 +29,7 @@ int ui_msgq_id, children_msgq_id; // id of the UI message queue
 void run_gui();
 
 // People creation
-void create_people();
+void create_people(void *numberOfPeople);
 
 // Dequeue from Queues ->
 struct personInformation dequeueNodeFromQueue(pthread_mutex_t *mutex, struct accessQueueNode **FrontQueue, int *numberOfPeopleInTheQueue);
@@ -40,6 +42,7 @@ void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, 
 void removeNodeFromQueueDueToImpatience(struct accessQueueNode **FrontQueue, pid_t personIDKey);
 
 // Threads
+void creatThreads();
 
 // security officers threads
 void insertToMalesRollingGateQueue();
@@ -180,17 +183,8 @@ int main()
     return 0;
 }
 
-void start_simulation()
+void printStartSimulationUntil8am()
 {
-    printf("\n\n\n\n.......5:30 AM: People Start coming.......\n\n");
-    reset_stdout();
-
-    // Read input file
-    readInputFile();
-
-    // Create the peocesses until 8 am
-    create_people();
-
     printf("\n\nIt's 8am:\n\n");
     reset_stdout();
 
@@ -204,6 +198,10 @@ void start_simulation()
     // People Start Entering the Rolling Gate Dependent on their Gender
     usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX));
     printf("\n\nPeople Start Entering the Rolling Gate Dependes on their Gender >>>>>>\n\n");
+}
+
+void creatThreads()
+{
 
     /* create a new thread that will keep move nodes from males access queue to Rolling Gate Queue "Males" */
     pthread_t p_thread1;
@@ -239,20 +237,11 @@ void start_simulation()
 
     /* add peopel after 8 am */
     pthread_t p_thread9;
-    pthread_create(&p_thread9, NULL, (void *)insertToAccessQueuesAfter8am, NULL);
+    pthread_create(&p_thread9, NULL, (void *)create_people, (void *)&g_peopleAfter8amUntil1pm);
 
     /* finishOIM*/
     pthread_t p_thread10;
     pthread_create(&p_thread10, NULL, (void *)finishOIM, NULL);
-
-    // printRollingGatesQueues();
-    // printAccessQueues();
-    // Number of Females and males
-    // printf("g_numberOfMalesInAccessQueue: %d\n",g_numberOfMalesInAccessQueue);
-    // printf("g_numberOfFemalesInAccessQueue: %d\n",g_numberOfFemalesInAccessQueue);
-    // sleep(60);
-    // printf("g_numberOfpeopleInGroupingArea :%d\n",g_numberOfpeopleInGroupingArea);
-    // displyGroupingAreaQueue();
 
     pthread_join(p_thread1, NULL);
     pthread_join(p_thread2, NULL);
@@ -264,6 +253,22 @@ void start_simulation()
     pthread_join(p_thread8, NULL);
     pthread_join(p_thread9, NULL);
     pthread_join(p_thread10, NULL);
+}
+void start_simulation()
+{
+    printf("\n\n\n\n.......5:00 AM: People Start coming.......\n\n");
+    reset_stdout();
+
+    // Read input file
+    readInputFile();
+
+    // Creat people until 8am
+    create_people((void *)&g_peopleUntil8am);
+
+    printStartSimulationUntil8am();
+
+    // Create Threads
+    creatThreads();
 
     clean_up();
     exit(0);
@@ -306,7 +311,7 @@ void readInputFile()
             // make a randome number of people within the range
 
             g_peopleUntil8am = randomIntegerInRange(l_range1, l_range2);
-            printf("\ng_peopleUntil8am:%d\n", g_peopleUntil8am);
+            // printf("\ng_peopleUntil8am:%d\n", g_peopleUntil8am);
         }
 
         if (lineNumber == 2)
@@ -326,7 +331,7 @@ void readInputFile()
             // make a randome number of people within the range
 
             g_peopleAfter8amUntil1pm = randomIntegerInRange(l_range1, l_range2);
-            printf("\npeopleAfter8amUntil1pm:%d\n", g_peopleAfter8amUntil1pm);
+            // printf("\npeopleAfter8amUntil1pm:%d\n", g_peopleAfter8amUntil1pm);
         }
     }
 
@@ -531,69 +536,6 @@ void printRollingGatesQueues()
         {
             printf("%d--%c--%d--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded, temp->personInfo.timerForPatience);
             temp = temp->nextPesron;
-        }
-    }
-}
-
-void create_people()
-{
-
-    int i, pid;
-    struct personInformation person = {0};
-    for (i = 0; i < g_peopleUntil8am; i++)
-    {
-        person.personID = 0;
-        person.gender = g_gender[randomIntegerInRange(0, 1)];       // person.gender = g_gender[randomIntegerInRange(0,1)];
-        person.officialDocumentNeeded = randomIntegerInRange(0, 3); // person.officialDocumentNeeded  = randomIntegerInRange(0,3);
-        person.timerForPatience = randomIntegerInRange(20, 30);
-        person.indexLocationInTheHostQueue = -1;
-        person.tiketNumberInGroupingArea = -1;
-        if (person.gender == 'M')
-            IndexOfTheProcessInsideTheHostQueue = g_numberOfMalesInAccessQueue;
-        else
-            IndexOfTheProcessInsideTheHostQueue = g_numberOfFemalesInAccessQueue;
-        pid = fork();
-        if (pid == -1)
-        {
-            printf("fork failure\n");
-            clean_up();
-            exit(-1);
-        }
-        else if (pid > 0)
-        {
-            // Print the info for the arrival person:
-            person.personID = pid;
-            printInfoForArrivalPerson(person);
-            usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for time delaying for arrival time
-            if (person.gender == 'M')
-                enqueueToQueue(person, &malesAccessQueue_mutex, &FrontAccessQueueMales, &RearAccessQueueMales, &g_numberOfMalesInAccessQueue);
-            else
-                enqueueToQueue(person, &femalesAccessQueue_mutex, &FrontAccessQueueFemales, &RearAccessQueueFemales, &g_numberOfFemalesInAccessQueue);
-        }
-        else if (pid == 0)
-        {
-
-            // Passing argument
-            char indexLocationInTheHostQueue[10];
-            sprintf(indexLocationInTheHostQueue, "%d", IndexOfTheProcessInsideTheHostQueue + 1);
-
-            char officialDocumentNeeded[10];
-            sprintf(officialDocumentNeeded, "%d", person.officialDocumentNeeded);
-
-            char gen[3];
-            if (person.gender == 'M')
-            {
-                strcpy(gen, "1");
-            }
-            else
-            {
-                strcpy(gen, "2");
-            }
-
-            execlp("./bin/child.o", "child.o", gen, officialDocumentNeeded, indexLocationInTheHostQueue, NULL);
-            perror("\n> child: exec\n");
-            clean_up();
-            exit(-2);
         }
     }
 }
@@ -823,11 +765,12 @@ void insertToIDRelatedProblemsTeller()
     }
 }
 
-void insertToAccessQueuesAfter8am()
+void create_people(void *numberOfPeople)
 {
+    int number_of_people = *((int *)numberOfPeople);
     int i, pid;
     struct personInformation person = {0};
-    for (i = 0; i < g_peopleAfter8amUntil1pm; i++)
+    for (i = 0; i < number_of_people; i++)
     {
         person.personID = 0;
         person.gender = g_gender[randomIntegerInRange(0, 1)];       // person.gender = g_gender[randomIntegerInRange(0,1)];
@@ -882,12 +825,6 @@ void insertToAccessQueuesAfter8am()
             clean_up();
             exit(-2);
         }
-    }
-
-    // TODO
-    while (1)
-    {
-        // don't kill thread 9
     }
 }
 
