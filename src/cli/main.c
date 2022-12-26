@@ -1,5 +1,6 @@
 #include "local.h"
 
+int ibraheem =-1;
 //..........Fuctions........................
 void readInputFile();
 int randomIintegerInRange(int lower,int upper);
