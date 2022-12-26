@@ -58,8 +58,10 @@ void paint_and_swap_frame()
 
     draw_walls();
 
-    draw_rolling_gate(ROLLING_GATES_X, ROLLING_GATES_Y);
-    draw_rolling_gate(ROLLING_GATES_X, -ROLLING_GATES_Y);
+    drawMetalDetector();
+
+    draw_rolling_gate(ROLLING_GATES_X, ROLLING_GATES_Y, male_rolling_gate_rotation);
+    draw_rolling_gate(ROLLING_GATES_X, -ROLLING_GATES_Y, female_rolling_gate_rotation);
 
     // draw_rolling_gate(0, -100);
 
@@ -134,15 +136,45 @@ int read_message_queue(HashTable *ht)
     if (message_queue_buffer->msg_type == PersonEntered)
     {
 
-        Queue *current_queue = (message_queue_buffer->gender == Male) ? queue_A1 : queue_A2;
+        Queue *current_queue = get_proper_queue_pointer(message_queue_buffer->current_location);
+        Person *p = create_person(
+            message_queue_buffer->person_pid,
+            message_queue_buffer->index_in_queue,
+            message_queue_buffer->gender,
+            message_queue_buffer->angriness,
+            current_queue);
 
-        Person *p = create_person(message_queue_buffer->person_pid, message_queue_buffer->index_in_queue, message_queue_buffer->gender, message_queue_buffer->angriness, current_queue);
+        p->destination_coords = get_queue_location_coords_for_index(current_queue, p->index_in_queue);
 
         ht_insert(ht, p->id, p);
+    }
+    else if (message_queue_buffer->msg_type == PersonExited)
+    {
+        Person *p = ht_search(ht, message_queue_buffer->person_pid);
+        p->destination_coords.y = 1000;
+    }
+    else if (message_queue_buffer->msg_type == PersonUpdated)
+    {
+        Person *p = ht_search(ht, message_queue_buffer->person_pid);
+        Queue *current_queue = get_proper_queue_pointer(message_queue_buffer->current_location);
+
+        if (p->current_queue != current_queue)
+        {
+            p->current_queue->current_people--;
+            p->current_queue = current_queue;
+            current_queue->current_people++;
+        }
+        p->index_in_queue = message_queue_buffer->index_in_queue;
+
+        p->destination_coords = get_queue_location_coords_for_index(current_queue, p->index_in_queue);
+
+        p->index_in_queue = message_queue_buffer->index_in_queue;
+        p->angriess = message_queue_buffer->angriness;
     }
 
     return 1;
 }
+
 void recursive_timed_update(int time)
 {
     if (!simulation_finished)
@@ -158,7 +190,8 @@ void recursive_timed_update(int time)
 
     update_people_locations();
 
-    rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
+    male_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
+    female_rolling_gate_rotation += ROLLING_GATE_DEGREE_PER_FRAME;
 }
 
 void setup_ui(int argc, char **argv)
@@ -177,7 +210,7 @@ void setup_ui(int argc, char **argv)
     background(); // Background color
 }
 
-void create_people()
+void create_random_people()
 {
 
     for (int i = 1; i < people_count; i++)
@@ -214,13 +247,16 @@ int main(int argc, char **argv)
     queue_A1 = (Queue *)malloc(sizeof(Queue));
     queue_A2 = (Queue *)malloc(sizeof(Queue));
 
-    initialize_queues(queue_A1, queue_A2);
+    queue_B1 = (Queue *)malloc(sizeof(Queue));
+    queue_B2 = (Queue *)malloc(sizeof(Queue));
+
+    initialize_queues(queue_A1, queue_A2, queue_B1, queue_B2);
 
     ht = create_table(CAPACITY);
 
     setup_message_queue();
 
-    create_people();
+    // create_random_people();
 
     // print_search(ht, "1");
     // print_search(ht, "2");

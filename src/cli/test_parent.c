@@ -58,11 +58,15 @@ void create_and_setup_message_queue()
 
 void write_mock_messages()
 {
+
+    int male_queue_ind = 0;
+    int female_queue_ind = 0;
+
     buf.msg_type = PersonEntered;
     buf.person_pid = 1234;
     buf.angriness = 0.2;
     buf.gender = Male;
-    buf.index_in_queue = 30;
+    buf.index_in_queue = male_queue_ind++;
     buf.current_location = MaleOutsideGatesArea;
 
     if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)
@@ -71,11 +75,135 @@ void write_mock_messages()
         exit(3);
     }
 
+    sleep(1);
+
     buf.msg_type = PersonEntered;
     buf.person_pid = 1235;
     buf.angriness = 0.5;
     buf.gender = Male;
-    buf.index_in_queue = 25;
+    buf.index_in_queue = male_queue_ind++;
+    buf.current_location = MaleOutsideGatesArea;
+
+    if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("msgsnd");
+        exit(4);
+    }
+
+    sleep(1);
+
+    buf.msg_type = PersonEntered;
+    buf.person_pid = 1236;
+    buf.angriness = 0.8;
+    buf.gender = Female;
+    buf.index_in_queue = female_queue_ind++;
+    buf.current_location = FemaleOutsideGatesArea;
+
+    if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("msgsnd");
+        exit(4);
+    }
+
+    sleep(1);
+
+    buf.msg_type = PersonEntered;
+    buf.person_pid = 123;
+    buf.angriness = 0.1;
+    buf.gender = Male;
+    buf.index_in_queue = male_queue_ind++;
+    buf.current_location = MaleOutsideGatesArea;
+
+    if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("msgsnd");
+        exit(4);
+    }
+
+    sleep(2);
+
+    buf.msg_type = PersonUpdated;
+    buf.person_pid = 123;
+    buf.angriness = 0.9;
+    buf.gender = Male;
+    buf.index_in_queue = male_queue_ind++;
+    buf.current_location = MaleOutsideGatesArea;
+
+    if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("msgsnd");
+        exit(4);
+    }
+
+    sleep(3);
+
+    buf.msg_type = PersonUpdated;
+    buf.person_pid = 123;
+    buf.angriness = 0.9;
+    buf.gender = Male;
+    buf.index_in_queue = 2;
+    buf.current_location = MaleMetalDetectorQueue;
+
+    if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("msgsnd");
+        exit(4);
+    }
+
+    sleep(1);
+
+    buf.msg_type = PersonEntered;
+    buf.person_pid = 124;
+    buf.angriness = 0.9;
+    buf.gender = Male;
+    buf.index_in_queue = male_queue_ind++;
+    buf.current_location = MaleOutsideGatesArea;
+
+    if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("msgsnd");
+        exit(4);
+    }
+
+    sleep(1);
+
+    buf.msg_type = PersonEntered;
+    buf.person_pid = 125;
+    buf.angriness = 1.0;
+    buf.gender = Female;
+    buf.index_in_queue = female_queue_ind++;
+    buf.current_location = FemaleOutsideGatesArea;
+
+    if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("msgsnd");
+        exit(4);
+    }
+
+    sleep(1);
+
+    int exiter_index = male_queue_ind++;
+
+    buf.msg_type = PersonEntered;
+    buf.person_pid = 126;
+    buf.angriness = 0.5;
+    buf.gender = Male;
+    buf.index_in_queue = exiter_index;
+    buf.current_location = MaleOutsideGatesArea;
+
+    if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("msgsnd");
+        exit(4);
+    }
+
+    sleep(2);
+
+    buf.msg_type = PersonExited;
+    buf.person_pid = 126;
+    buf.angriness = 0.5;
+    buf.gender = Male;
+    buf.index_in_queue = exiter_index;
     buf.current_location = MaleOutsideGatesArea;
 
     if (msgsnd(msg_q_id, &buf, sizeof(buf), 0) == -1)

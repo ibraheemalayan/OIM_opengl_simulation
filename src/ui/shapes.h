@@ -11,7 +11,8 @@ void background();
 void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius, int R, int G, int B);
 void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height, int R, int G, int B);
 void draw_person(Person *p);
-void draw_rolling_gate(GLfloat x, GLfloat y);
+void drawMetalDetector();
+void draw_rolling_gate(GLfloat x, GLfloat y, float rotation);
 
 /*
  * Function that handles the drawing of a circle using the triangle fan
@@ -91,9 +92,21 @@ void draw_walls()
 
     // middle wall
     draw_rectangle(wall_x, 0, -500, wall_thickness, R, G, B);
+
+    // ****************************
+    // Metal Detector Wall
+    // ****************************
+
+    float wall_2_x = METAL_DETECTOR_X - wall_thickness / 2;
+
+    float metal_detector_top = METAL_DETECTOR_SIZE / 2;
+    float metal_detector_bottom = -METAL_DETECTOR_SIZE / 2;
+
+    draw_rectangle(wall_2_x, metal_detector_top, wall_thickness, 500 + metal_detector_top, R, G, B);
+    draw_rectangle(wall_2_x, metal_detector_bottom, wall_thickness, -500 + metal_detector_bottom, R, G, B);
 }
 
-void draw_rolling_gate(GLfloat x, GLfloat y)
+void draw_rolling_gate(GLfloat x, GLfloat y, float rotation)
 {
     float height = ROLLING_GATE_SIZE, width = ROLLING_GATE_SIZE, thickness = ROLLING_GATE_SIZE / 10;
 
@@ -104,7 +117,7 @@ void draw_rolling_gate(GLfloat x, GLfloat y)
 
     glTranslatef(x_translate, y_translate, 0); // move the Z axis to the center of the gate
 
-    glRotatef(rolling_gate_rotation, 0, 0, 1); // set the rotation to be aroung the Z axis
+    glRotatef(rotation, 0, 0, 1); // set the rotation to be aroung the Z axis
 
     glTranslatef(-x_translate, -y_translate, 0); // move the Z axis back to the original position
 
@@ -126,6 +139,17 @@ void draw_rolling_gate(GLfloat x, GLfloat y)
 
     glPopMatrix();
 };
+
+void drawMetalDetector()
+{
+    int R = 0, G = 20, B = 240;
+    float wall_2_x = METAL_DETECTOR_X - (METAL_DETECTOR_SIZE / 10);
+
+    float metal_detector_top = METAL_DETECTOR_SIZE / 2;
+    float metal_detector_bottom = -METAL_DETECTOR_SIZE / 2;
+
+    draw_rectangle(wall_2_x, metal_detector_bottom, METAL_DETECTOR_SIZE / 5, metal_detector_top * 2, R, G, B);
+}
 
 void reshape(int width, int height)
 {

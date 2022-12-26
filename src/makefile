@@ -50,7 +50,7 @@ test_compile_cli:
 
 run_test_server: test_compile_cli;
 	@echo "Running Test CLI..."
-	gdb ./bin/test1.o $(RUN_ARGS)
+	./bin/test1.o $(RUN_ARGS)
 
 run_test_client: test_compile_cli;
 	@echo "Running Test CLI..."
