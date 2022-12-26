@@ -34,9 +34,12 @@ void create_people(void* numberOfPeople);
 // Dequeue from Queues ->
 struct personInformation dequeueNodeFromQueue(pthread_mutex_t *mutex, struct accessQueueNode **FrontQueue, int *numberOfPeopleInTheQueue);
 void updateIndexOfQueue(struct accessQueueNode **FrontOfQueue);
+void deleteListOfIDsAndKillAllProcesses();
+
 
 // Enqueue To Queues ->
 void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, struct accessQueueNode **FrontQueue, struct accessQueueNode **RearQueue, int *numberOfPeopleInTheQueue);
+void addProcessIDToListThatHaveAllProcessesIDs(struct PidNode **header, pid_t pid);
 
 // remove Node From Queue Because Of Impatience
 void removeNodeFromQueueDueToImpatience(struct accessQueueNode **FrontQueue, pid_t personIDKey);
@@ -108,6 +111,11 @@ struct accessQueueNode *RearForFamilyReunionDocumentsTellerQueue = NULL;
 // Pointers to the ID-related problems  teller
 struct accessQueueNode *FrontForIDRelatedProblemsTellerQueue = NULL;
 struct accessQueueNode *RearForIDRelatedProblemsTellerQueue = NULL;
+
+// Pointers to linke list that have all processes , to kill them
+struct PidNode *headerForListHaveAllProcessesIDs= NULL;
+
+
 
 // Threshold
 #define g_threshold 2
@@ -345,6 +353,46 @@ int randomIntegerInRange(int lower, int upper)
     srand(time(NULL)); // randomize seed
     return (rand() % (upper - lower + 1)) + lower;
 }
+
+
+
+void addProcessIDToListThatHaveAllProcessesIDs(struct PidNode **header, pid_t pid){
+    //create a new node
+    struct PidNode *ptr = (struct PidNode *)malloc(sizeof(struct PidNode));
+    if (ptr == NULL)
+    {
+        printf("\nOVERFLOW \n");
+        return;
+    }
+    else
+    {   
+        ptr->personID=pid;
+        ptr->nextPid=*header;
+        *header = ptr;
+
+    }
+  
+}
+
+void deleteListOfIDsAndKillAllProcesses()
+{
+    struct PidNode *temp;
+
+    while(headerForListHaveAllProcessesIDs != NULL)
+    {
+        temp = headerForListHaveAllProcessesIDs;
+        kill(temp->personID, SIGKILL);
+        waitpid(temp->personID, NULL, 0);
+        headerForListHaveAllProcessesIDs = headerForListHaveAllProcessesIDs->nextPid;
+
+        free(temp);
+    }
+
+    printf("\n\nSUCCESSFULLY DELETED ALL Processes\n\n");
+    reset_stdout();
+}
+
+
 
 void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, struct accessQueueNode **FrontQueue, struct accessQueueNode **RearQueue, int *numberOfPeopleInTheQueue)
 {
@@ -803,6 +851,8 @@ void create_people(void* numberOfPeople)
                 enqueueToQueue(person, &malesAccessQueue_mutex, &FrontAccessQueueMales, &RearAccessQueueMales, &g_numberOfMalesInAccessQueue);
             else
                 enqueueToQueue(person, &femalesAccessQueue_mutex, &FrontAccessQueueFemales, &RearAccessQueueFemales, &g_numberOfFemalesInAccessQueue);
+            
+            addProcessIDToListThatHaveAllProcessesIDs(&headerForListHaveAllProcessesIDs, pid);// add to ListHaveAllProcessesIDs
         }
         else if (pid == 0)
         {
@@ -954,14 +1004,15 @@ void create_and_setup_message_queues()
 
 void clean_up()
 {
-
+    
     if (gui_pid != 0)
-    {
+    {   
         kill(gui_pid, SIGKILL);
         waitpid(gui_pid, NULL, 0);
     }
 
     // TODO kill and wait all children
+    deleteListOfIDsAndKillAllProcesses();
 
     // remove the message queue from the System V IPC
     msgctl(ui_msgq_id, IPC_RMID, NULL);
@@ -970,6 +1021,7 @@ void clean_up()
     // remove the queue file
     remove("ui_queue.bin");
     remove("children_queue.bin");
+    
 }
 
 void interrupt_sig_handler(int sig)

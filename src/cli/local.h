@@ -40,5 +40,12 @@ struct parent_message_buf
         parent_child_message_payload payload;
 };
 
+struct PidNode //for addProcessToListThatHaveAllProcessesIDs
+{
+        pid_t personID;   
+        struct PidNode *nextPid;
+};
+
+
 typedef struct parent_message_buf parent_message_buf;
 #endif
