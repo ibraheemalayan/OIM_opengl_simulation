@@ -51,6 +51,8 @@ void paint_and_swap_frame()
     // Draw the queues
     draw_queues();
 
+    draw_teller_text();
+
     draw_walls();
 
     drawMetalDetector();

@@ -169,4 +169,47 @@ void background()
     glClearColor(0.95, 0.95, 0.95, 1.0);
 }
 
+void draw_teller_text()
+{
+    char *string1 = "Bx";
+
+    glColor3f(0.0, 0.0, 0.0);
+    glRasterPos2f(TELLER_TEXT_X, TELLER_Bx_Y_VALUE); // define position on the screen
+    for (size_t i = 0; i < 2; i++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string1[i]);
+    }
+    glEnd();
+
+    char *string2 = "Ix";
+
+    glColor3f(0.0, 0.0, 0.0);
+    glRasterPos2f(TELLER_TEXT_X, TELLER_Ix_Y_VALUE); // define position on the screen
+    for (size_t i = 0; i < 2; i++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string2[i]);
+    }
+    glEnd();
+
+    char *string3 = "Tx";
+
+    glColor3f(0.0, 0.0, 0.0);
+    glRasterPos2f(TELLER_TEXT_X, TELLER_Tx_Y_VALUE); // define position on the screen
+    for (size_t i = 0; i < 2; i++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string3[i]);
+    }
+    glEnd();
+
+    char *string4 = "Rx";
+
+    glColor3f(0.0, 0.0, 0.0);
+    glRasterPos2f(TELLER_TEXT_X, TELLER_Rx_Y_VALUE); // define position on the screen
+    for (size_t i = 0; i < 2; i++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string4[i]);
+    }
+    glEnd();
+}
+
 #endif
