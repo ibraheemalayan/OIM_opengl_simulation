@@ -27,7 +27,7 @@ int ui_msgq_id, children_msgq_id; // id of the UI message queue
 void run_gui();
 
 // People creation
-void creatPeople();
+void create_people();
 
 // Dequeue from Queues ->
 struct personInformation dequeueNodeFromQueue(pthread_mutex_t *mutex, struct accessQueueNode **FrontQueue, int *numberOfPeopleInTheQueue);
@@ -189,7 +189,7 @@ void start_simulation()
     readInputFile();
 
     // Create the peocesses until 8 am
-    creatPeople();
+    create_people();
 
     printf("\n\nIt's 8am:\n\n");
     reset_stdout();
@@ -265,6 +265,7 @@ void start_simulation()
     pthread_join(p_thread9, NULL);
     pthread_join(p_thread10, NULL);
 
+    clean_up();
     exit(0);
 }
 
@@ -277,7 +278,10 @@ void readInputFile()
 
     fp = fopen("cli/inputfile.txt", "r");
     if (fp == NULL)
+    {
+        clean_up();
         exit(EXIT_FAILURE);
+    }
     int lineNumber = 0;
     while ((read = getline(&line, &len, fp)) != -1)
     {
@@ -531,7 +535,7 @@ void printRollingGatesQueues()
     }
 }
 
-void creatPeople()
+void create_people()
 {
 
     int i, pid;
@@ -552,6 +556,7 @@ void creatPeople()
         if (pid == -1)
         {
             printf("fork failure\n");
+            clean_up();
             exit(-1);
         }
         else if (pid > 0)
@@ -570,24 +575,24 @@ void creatPeople()
 
             // Passing argument
             char indexLocationInTheHostQueue[10];
-            sprintf(indexLocationInTheHostQueue, "%d", IndexOfTheProcessInsideTheHostQueue);
-
-            char pid[10];
-            sprintf(pid, "%d", getpid());
+            sprintf(indexLocationInTheHostQueue, "%d", IndexOfTheProcessInsideTheHostQueue + 1);
 
             char officialDocumentNeeded[10];
             sprintf(officialDocumentNeeded, "%d", person.officialDocumentNeeded);
 
-            char gender[2] = {person.gender, '\0'};
+            char gen[3];
+            if (person.gender == 'M')
+            {
+                strcpy(gen, "1");
+            }
+            else
+            {
+                strcpy(gen, "2");
+            }
 
-            char timerForPatience[10];
-            sprintf(timerForPatience, "%d", person.timerForPatience);
-
-            char tiketNumberInGroupingArea[10];
-            sprintf(tiketNumberInGroupingArea, "%d", person.tiketNumberInGroupingArea);
-
-            execlp("./bin/child.o", "child.o", pid, officialDocumentNeeded, gender, timerForPatience, tiketNumberInGroupingArea, indexLocationInTheHostQueue, "&", NULL);
+            execlp("./bin/child.o", "child.o", gen, officialDocumentNeeded, indexLocationInTheHostQueue, NULL);
             perror("\n> child: exec\n");
+            clean_up();
             exit(-2);
         }
     }
@@ -838,6 +843,7 @@ void insertToAccessQueuesAfter8am()
         if (pid == -1)
         {
             printf("fork failure\n");
+            clean_up();
             exit(-1);
         }
         else if (pid > 0)
@@ -856,24 +862,24 @@ void insertToAccessQueuesAfter8am()
 
             // Passing argument
             char indexLocationInTheHostQueue[10];
-            sprintf(indexLocationInTheHostQueue, "%d", IndexOfTheProcessInsideTheHostQueue);
-
-            char pid[10];
-            sprintf(pid, "%d", getpid());
+            sprintf(indexLocationInTheHostQueue, "%d", IndexOfTheProcessInsideTheHostQueue + 1);
 
             char officialDocumentNeeded[10];
             sprintf(officialDocumentNeeded, "%d", person.officialDocumentNeeded);
 
-            char gender[2] = {person.gender, '\0'};
+            char gen[3];
+            if (person.gender == 'M')
+            {
+                strcpy(gen, "1");
+            }
+            else
+            {
+                strcpy(gen, "2");
+            }
 
-            char timerForPatience[10];
-            sprintf(timerForPatience, "%d", person.timerForPatience);
-
-            char tiketNumberInGroupingArea[10];
-            sprintf(tiketNumberInGroupingArea, "%d", person.tiketNumberInGroupingArea);
-
-            execlp("./bin/child.o", "child.o", pid, officialDocumentNeeded, gender, timerForPatience, tiketNumberInGroupingArea, indexLocationInTheHostQueue, "&", NULL);
+            execlp("./bin/child.o", "child.o", gen, officialDocumentNeeded, indexLocationInTheHostQueue, NULL);
             perror("\n> child: exec\n");
+            clean_up();
             exit(-2);
         }
     }
@@ -898,6 +904,7 @@ void finishOIM()
         usleep(100);
         if (numberOfPeopleThatLeftOIMofficesSatisfied > g_threshold || numberOfPeopleThatLeftOIMofficesUnhappy > g_threshold)
         {
+            clean_up();
             exit(0);
         }
     }
@@ -910,12 +917,14 @@ void run_gui()
     if (gui_pid == -1)
     {
         printf("fork gui failure\n");
+        clean_up();
         exit(-4);
     }
     else if (gui_pid == 0)
     {
         execlp("./bin/gui.o", "gui.o", NULL);
         perror("\n> gui: exec failure\n");
+        clean_up();
         exit(-2);
     }
 }
@@ -942,11 +951,13 @@ void create_and_setup_message_queues()
     if ((ui_queue_key = ftok("ui_queue.bin", 30)) == -1)
     {
         perror("ftok");
+        clean_up();
         exit(1);
     }
     if ((children_queue_key = ftok("children_queue.bin", 30)) == -1)
     {
         perror("ftok");
+        clean_up();
         exit(1);
     }
 
@@ -954,6 +965,7 @@ void create_and_setup_message_queues()
     if (ui_msgq_id == -1)
     {
         perror("msgget ui queue");
+        clean_up();
         exit(2);
     }
 
@@ -961,6 +973,7 @@ void create_and_setup_message_queues()
     if (children_msgq_id == -1)
     {
         perror("msgget children queue");
+        clean_up();
         exit(2);
     }
 
@@ -969,6 +982,7 @@ void create_and_setup_message_queues()
     if (msgctl(ui_msgq_id, IPC_STAT, &ui_queue_info) == -1)
     {
         perror("Can not read message queue info");
+        clean_up();
         exit(5);
     }
 
@@ -982,6 +996,7 @@ void create_and_setup_message_queues()
     if (msgctl(children_msgq_id, IPC_STAT, &children_queue_info) == -1)
     {
         perror("Can not read message queue info");
+        clean_up();
         exit(5);
     }
 
@@ -1021,5 +1036,6 @@ void interrupt_sig_handler(int sig)
     printf("\n\nInterrupt signal received, cleaning up queues.\n");
     clean_up();
     reset_stdout();
+    clean_up();
     exit(0);
 }
