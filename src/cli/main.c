@@ -16,7 +16,6 @@ void readInputFile();
 int randomIntegerInRange(int lower, int upper);
 void printAccessQueues();
 void printRollingGatesQueues();
-void printInfoForArrivalPerson(struct personInformation person);
 void start_simulation();
 void displyGroupingAreaQueue();
 void create_and_setup_message_queues(); // creates the message queue
@@ -274,6 +273,51 @@ void start_simulation()
     exit(0);
 }
 
+Location get_location_enum(struct accessQueueNode *queue_front)
+{
+
+    if (queue_front == FrontAccessQueueMales)
+    {
+        return MaleOutsideGatesArea;
+    }
+    if (queue_front == FrontAccessQueueFemales)
+    {
+        return FemaleOutsideGatesArea;
+    }
+    if (queue_front == FrontRollingGateQueueMales)
+    {
+        return MaleMetalDetectorQueue;
+    }
+    if (queue_front == FrontRollingGateQueueFemales)
+    {
+        return FemaleMetalDetectorQueue;
+    }
+    if (queue_front == FrontForGroupingAreaQueue)
+    {
+        return InnerGroupingArea;
+    }
+    if (queue_front == FrontForBirthCertificatesTellerQueue)
+    {
+        return BxTeller;
+    }
+    if (queue_front == FrontForTravelDocumentsTellerQueue)
+    {
+        return TxTeller;
+    }
+    if (queue_front == FrontForFamilyReunionDocumentsTellerQueue)
+    {
+        return RxTeller;
+    }
+    if (queue_front == FrontForIDRelatedProblemsTellerQueue)
+    {
+        return IxTeller;
+    }
+
+    printf("Error in get_location_enum");
+
+    return 0; // TODO error
+}
+
 void readInputFile()
 {
     FILE *fp;
@@ -357,7 +401,8 @@ void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, 
     else
     {
         person.indexLocationInTheHostQueue = (*numberOfPeopleInTheQueue); // update Index
-        kill(person.personID, SIGUSR1);                                   // Signal the process to move inside the host Queue
+        person.currentLocation = get_location_enum(*FrontQueue);
+        notify_person(&person); // Signal the process to move inside the host Queue
         ptr->personInfo = person;
         if ((*FrontQueue) == NULL)
         {
@@ -394,13 +439,34 @@ struct personInformation dequeueNodeFromQueue(pthread_mutex_t *mutex, struct acc
         temp = (*FrontQueue);
         person = temp->personInfo;
         person.indexLocationInTheHostQueue = -1; // update Index
-        kill(person.personID, SIGUSR2);          // Signal to the process to move to the next Queue
+        notify_person(&person);                  // Signal the process to move inside the host Queue
         (*FrontQueue) = (*FrontQueue)->nextPesron;
         free(temp);
         (*numberOfPeopleInTheQueue)--;
     }
     pthread_mutex_unlock(mutex);
     return person;
+}
+
+void notify_person(struct personInformation *person)
+{
+
+    parent_message_buf buf;
+
+    buf.pid = person->personID;
+
+    buf.payload.current_location = person->currentLocation;
+    buf.payload.index_in_queue = person->indexLocationInTheHostQueue;
+
+    if (msgsnd(children_msgq_id, &buf, sizeof(buf), 0) == -1)
+    {
+        perror("children msgsnd in parent");
+        exit(3);
+    }
+
+    printf("\n\n>>>> Parent sent message to child %d\n", buf.pid);
+
+    kill(person->personID, SIGUSR1);
 }
 
 void removeNodeFromQueueDueToImpatience(struct accessQueueNode **FrontQueue, pid_t personIDKey)
@@ -441,7 +507,7 @@ void updateIndexOfQueue(struct accessQueueNode **FrontOfQueue)
     while (tmp != NULL)
     {
         tmp->personInfo.indexLocationInTheHostQueue = tmp->personInfo.indexLocationInTheHostQueue - 1;
-        kill(tmp->personInfo.personID, SIGUSR1); // Signal to the process to move inside the host Queue
+        notify_person(&(tmp->personInfo)); // Signal the process to move
         tmp = tmp->nextPesron;
     }
 }
@@ -460,7 +526,7 @@ void displyGroupingAreaQueue()
         temp = FrontForGroupingAreaQueue;
         while (temp)
         {
-            printf("%d--%c--%d--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded, temp->personInfo.timerForPatience);
+            printf("%d--%c--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded);
             temp = temp->nextPesron;
         }
     }
@@ -482,7 +548,8 @@ void printAccessQueues()
         while (temp)
         {
             sleep(1); // simulation for time delaying
-            printf("%d--%c--%d--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded, temp->personInfo.timerForPatience);
+            printf("%d--%c--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded);
+
             reset_stdout();
             temp = temp->nextPesron;
         }
@@ -500,7 +567,7 @@ void printAccessQueues()
         while (temp)
         {
             sleep(1); // simulation for time delaying
-            printf("%d--%c--%d--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded, temp->personInfo.timerForPatience);
+            printf("%d--%c--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded);
             reset_stdout();
             temp = temp->nextPesron;
         }
@@ -520,7 +587,7 @@ void printRollingGatesQueues()
         temp = FrontRollingGateQueueMales;
         while (temp)
         {
-            printf("%d--%c--%d--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded, temp->personInfo.timerForPatience);
+            printf("%d--%c--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded);
             temp = temp->nextPesron;
         }
     }
@@ -534,7 +601,7 @@ void printRollingGatesQueues()
         temp = FrontRollingGateQueueFemales;
         while (temp)
         {
-            printf("%d--%c--%d--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded, temp->personInfo.timerForPatience);
+            printf("%d--%c--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded);
             temp = temp->nextPesron;
         }
     }
@@ -552,8 +619,6 @@ void insertToMalesRollingGateQueue()
             Person = dequeueNodeFromQueue(&malesAccessQueue_mutex, &FrontAccessQueueMales, &g_numberOfMalesInAccessQueue);
             enqueueToQueue(Person, &malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &RearRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
             updateIndexOfQueue(&FrontAccessQueueMales); // updateIndexOfQueue for AccessQueueMales
-                                                        // printRollingGatesQueues();
-                                                        // printAccessQueues();
         }
     }
 }
@@ -775,13 +840,19 @@ void create_people(void *numberOfPeople)
         person.personID = 0;
         person.gender = g_gender[randomIntegerInRange(0, 1)];       // person.gender = g_gender[randomIntegerInRange(0,1)];
         person.officialDocumentNeeded = randomIntegerInRange(0, 3); // person.officialDocumentNeeded  = randomIntegerInRange(0,3);
-        person.timerForPatience = randomIntegerInRange(20, 30);
         person.indexLocationInTheHostQueue = -1;
         person.tiketNumberInGroupingArea = -1;
         if (person.gender == 'M')
+        {
+
             IndexOfTheProcessInsideTheHostQueue = g_numberOfMalesInAccessQueue;
+            person.currentLocation = MaleOutsideGatesArea;
+        }
         else
+        {
             IndexOfTheProcessInsideTheHostQueue = g_numberOfFemalesInAccessQueue;
+            person.currentLocation = FemaleOutsideGatesArea;
+        }
         pid = fork();
         if (pid == -1)
         {
@@ -793,7 +864,6 @@ void create_people(void *numberOfPeople)
         {
             // Print the info for the arrival person:
             person.personID = pid;
-            printInfoForArrivalPerson(person);
             usleep(randomIntegerInRange(SLEEP_MIN, SLEEP_MAX)); // simulation for time delaying for arrival time
             if (person.gender == 'M')
                 enqueueToQueue(person, &malesAccessQueue_mutex, &FrontAccessQueueMales, &RearAccessQueueMales, &g_numberOfMalesInAccessQueue);
@@ -828,12 +898,6 @@ void create_people(void *numberOfPeople)
     }
 }
 
-void printInfoForArrivalPerson(struct personInformation person)
-{
-    printf("\n\nPerson %d arrived, Gernder %c, Official Document Needed is %s\n\n", person.personID, person.gender, g_OfficialDocument[person.officialDocumentNeeded]);
-    reset_stdout();
-}
-
 void finishOIM()
 {
     while (1)
@@ -841,6 +905,10 @@ void finishOIM()
         usleep(100);
         if (numberOfPeopleThatLeftOIMofficesSatisfied > g_threshold || numberOfPeopleThatLeftOIMofficesUnhappy > g_threshold)
         {
+            green_stdout();
+            printf("\n\nUser Specified Threshold Reached\n");
+            reset_stdout();
+
             clean_up();
             exit(0);
         }
@@ -973,6 +1041,5 @@ void interrupt_sig_handler(int sig)
     printf("\n\nInterrupt signal received, cleaning up queues.\n");
     clean_up();
     reset_stdout();
-    clean_up();
     exit(0);
 }

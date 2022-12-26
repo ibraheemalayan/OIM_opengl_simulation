@@ -37,7 +37,9 @@ void initialize_queues(
     Queue *queue_A1,
     Queue *queue_A2,
     Queue *queue_B1,
-    Queue *queue_B2)
+    Queue *queue_B2,
+    Queue *metal_detector,
+    Queue *inner_grouping_area)
 {
     queue_A1->coords.x = QUEUE_A1_X_VALUE;
     queue_A1->coords.y = QUEUE_A1_Y_VALUE;
@@ -62,6 +64,18 @@ void initialize_queues(
     queue_B2->width = QUEUE_B_WIDTH;
     queue_B2->height = QUEUE_B_HEIGHT;
     queue_B2->current_people = 0;
+
+    metal_detector->coords.x = METAL_DETECTOR_X;
+    metal_detector->coords.y = 0;
+    metal_detector->width = 50;
+    metal_detector->height = 50;
+    metal_detector->current_people = 0;
+
+    inner_grouping_area->coords.x = INNER_GROUPING_AREA_X_VALUE;
+    inner_grouping_area->coords.y = INNER_GROUPING_AREA_Y_VALUE;
+    inner_grouping_area->width = INNER_GROUPING_AREA_WIDTH;
+    inner_grouping_area->height = INNER_GROUPING_AREA_HEIGHT;
+    inner_grouping_area->current_people = 0;
 }
 
 Coordinates get_queue_location_coords_for_next(Queue *queue)
@@ -122,8 +136,11 @@ void draw_queues()
 {
     draw_rectangle(QUEUE_A1_X_VALUE, QUEUE_A1_Y_VALUE, QUEUE_A1_WIDTH, QUEUE_A1_HEIGHT, 220, 220, 220);
     draw_rectangle(QUEUE_A2_X_VALUE, QUEUE_A2_Y_VALUE, QUEUE_A2_WIDTH, QUEUE_A2_HEIGHT, 220, 220, 220);
+
     draw_rectangle(QUEUE_B_X_VALUE, QUEUE_B1_Y_VALUE, QUEUE_B_WIDTH, QUEUE_B_HEIGHT, 220, 220, 220);
     draw_rectangle(QUEUE_B_X_VALUE, QUEUE_B2_Y_VALUE, QUEUE_B_WIDTH, QUEUE_B_HEIGHT, 220, 220, 220);
+
+    draw_rectangle(INNER_GROUPING_AREA_X_VALUE, INNER_GROUPING_AREA_Y_VALUE, INNER_GROUPING_AREA_WIDTH, INNER_GROUPING_AREA_HEIGHT, 220, 220, 220);
 }
 
 void print_message(message_payload *buf)
@@ -148,6 +165,10 @@ Queue *get_proper_queue_pointer(Location current_location)
         return queue_B1;
     case FemaleMetalDetectorQueue:
         return queue_B2;
+    case MetalDetector:
+        return metal_detector;
+    case InnerGroupingArea:
+        return inner_grouping_area;
     default:
         break;
     }
@@ -158,7 +179,7 @@ Queue *get_proper_queue_pointer(Location current_location)
 
     sleep(1);
 
-    return MaleOutsideGatesArea;
+    return NULL;
 }
 
 #endif

@@ -11,9 +11,9 @@ void setup_message_queue();
 void validate_args(int argc, char *argv[]);
 void update_ui(MsgType msg_type);
 
-#define MAX_PATIENCE_TIME 100
-#define MIN_PATIENCE_TIME 20
-#define PATIENCE_STEP 2
+#define MAX_PATIENCE_TIME 200
+#define MIN_PATIENCE_TIME 50
+#define PATIENCE_STEP 1
 #define FIRST_ALARM_FACTOR 1000   // 10 ms
 #define ALARM_INTERVAL 400 * 1000 // 400 ms
 
@@ -160,7 +160,7 @@ void handle_officer_order_signal(int the_sig)
     parent_message_buf message_queue_buffer;
 
     // read messages intended for this child
-    if (msgrcv(parent_msgq_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), my_pid, IPC_NOWAIT | MSG_NOERROR) == -1)
+    if (msgrcv(parent_msgq_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), my_pid, MSG_NOERROR) == -1)
     {
         if (errno == ENOMSG)
         {
@@ -175,6 +175,10 @@ void handle_officer_order_signal(int the_sig)
         perror("msgrcv");
         exit(3);
     }
+
+    green_stdout();
+    printf("A message of type %d was received", my_pid);
+    reset_stdout();
 
     index_in_queue = message_queue_buffer.payload.index_in_queue;
     current_location = message_queue_buffer.payload.current_location;
