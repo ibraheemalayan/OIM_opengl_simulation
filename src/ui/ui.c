@@ -127,8 +127,8 @@ int read_message_queue(HashTable *ht)
         exit(3);
     }
 
-    printf("received message:\n\n");
-    print_message(&(message_queue_buffer.payload));
+    // printf("received message:\n\n");
+    // print_message(&(message_queue_buffer.payload));
 
     if (message_queue_buffer.payload.msg_type == PersonEntered)
     {
@@ -145,10 +145,23 @@ int read_message_queue(HashTable *ht)
 
         ht_insert(ht, p->id, p);
     }
-    else if (message_queue_buffer.payload.msg_type == PersonExited)
+    else if (message_queue_buffer.payload.msg_type == PersonExitedUnserved)
     {
         Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
         p->destination_coords.y = 1000;
+        p->angriess = 1;
+    }
+    else if (message_queue_buffer.payload.msg_type == PersonExitedSatisfied)
+    {
+        Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
+        p->destination_coords.y = -1000;
+        p->angriess = 0;
+    }
+    else if (message_queue_buffer.payload.msg_type == PersonExitedUnsatisfied)
+    { // TODO color satisfied in green
+        Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
+        p->destination_coords.y = -1000;
+        p->angriess = 1;
     }
     else if (message_queue_buffer.payload.msg_type == PersonUpdated)
     {

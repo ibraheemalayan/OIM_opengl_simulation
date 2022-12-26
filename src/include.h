@@ -30,7 +30,9 @@ enum MsgType
 {
   PersonEntered = 1,
   PersonUpdated,
-  PersonExited,
+  PersonExitedSatisfied,
+  PersonExitedUnsatisfied,
+  PersonExitedUnserved,
 };
 
 enum DocumentType
