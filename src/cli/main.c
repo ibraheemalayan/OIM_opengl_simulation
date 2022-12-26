@@ -28,6 +28,7 @@ void insertToMalesRollingGateQueue();
 void insertToFemalesRollingGateQueue();
 void insertToFemalesMetalDetector();
 void insertToMalesMetalDetector();
+void insertToMetalDetectors();
 void insertToTellersQueues();
 void insertToBirthCertificatesTeller();
 void insertToTravelDocumentsTeller();
@@ -169,33 +170,29 @@ void simulation()
     pthread_t p_thread2;
     pthread_create(&p_thread2, NULL, (void *)insertToFemalesRollingGateQueue, NULL);
 
-    /* create a new thread that will keep move nodes from Males rolling gate queue to the Males metal detector*/
+    /* create a new thread that will keep move nodes from Males and Females rolling gate queues to the metal detectors*/
     pthread_t p_thread3;
-    pthread_create(&p_thread3, NULL, (void *)insertToMalesMetalDetector, NULL);
-
-    /* create a new thread that will keep move nodes from  Females rolling gate queue to the  Females metal detector*/
-    pthread_t p_thread4;
-    pthread_create(&p_thread4, NULL, (void *)insertToFemalesMetalDetector, NULL);
+    pthread_create(&p_thread3, NULL, (void *)insertToMetalDetectors, NULL);
 
     /* create a new thread that will keep move nodes from  Grouping area queue to tellers Queues*/
-    pthread_t p_thread5;
-    pthread_create(&p_thread5, NULL, (void *)insertToTellersQueues, NULL);
+    pthread_t p_thread4;
+    pthread_create(&p_thread4, NULL, (void *)insertToTellersQueues, NULL);
 
     /* create a new thread that will keep move nodes from  Birth Certificates Teller Queue to the Birth Certificates Teller*/
-    pthread_t p_thread6;
-    pthread_create(&p_thread6, NULL, (void *)insertToBirthCertificatesTeller, NULL);
+    pthread_t p_thread5;
+    pthread_create(&p_thread5, NULL, (void *)insertToBirthCertificatesTeller, NULL);
 
     /* create a new thread that will keep move nodes from  Travel Documents Teller Queue to the Travel Documents Teller*/
-    pthread_t p_thread7;
-    pthread_create(&p_thread7, NULL, (void *)insertToTravelDocumentsTeller, NULL);
+    pthread_t p_thread6;
+    pthread_create(&p_thread6, NULL, (void *)insertToTravelDocumentsTeller, NULL);
 
     /* create a new thread that will keep move nodes from  Family Reunion Documents Teller Queue to the Family Reunion Documents Teller*/
-    pthread_t p_thread8;
-    pthread_create(&p_thread8, NULL, (void *)insertToFamilyReunionDocumentsTeller, NULL);
+    pthread_t p_thread7;
+    pthread_create(&p_thread7, NULL, (void *)insertToFamilyReunionDocumentsTeller, NULL);
 
     /* create a new thread that will keep move nodes from  ID Related Problems Teller Queue to the ID Related Problems Teller*/
-    pthread_t p_thread9;
-    pthread_create(&p_thread9, NULL, (void *)insertToIDRelatedProblemsTeller, NULL);
+    pthread_t p_thread8;
+    pthread_create(&p_thread8, NULL, (void *)insertToIDRelatedProblemsTeller, NULL);
 
     // displyRollingGatesQueues();
     // displyAccessQueues();
@@ -214,7 +211,6 @@ void simulation()
     pthread_join(p_thread6, NULL);
     pthread_join(p_thread7, NULL);
     pthread_join(p_thread8, NULL);
-    pthread_join(p_thread9, NULL);
 }
 
 void readInputFile()
@@ -559,10 +555,7 @@ void insertToFemalesRollingGateQueue()
 void insertToMalesMetalDetector()
 {
     struct personInformation malePersonInMetalDetectorForMales;
-    while (1)
-    {
-        if (g_numberOfMaelsInTheRollingGateQueue > 0)
-        {
+    if (g_numberOfMaelsInTheRollingGateQueue > 0){
             sleep(randomIintegerInRange(3, 6)); // simulation for delay
             malePersonInMetalDetectorForMales = dequeueNodeFromQueue(&malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
             printf("\n\nPerson %d Enter the Metal Detector For Males, Gernder %c, Official Document Needed is %s\n\n", malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender, g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
@@ -571,17 +564,14 @@ void insertToMalesMetalDetector()
             enqueueToQueue(malePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
             updateIndexOfQueue(&FrontRollingGateQueueMales); // updateIndexOfQueue for RollingGateQueueMales
             // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
-        }
     }
+    
 }
 
 void insertToFemalesMetalDetector()
 {
     struct personInformation femalePersonInMetalDetectorForMales;
-    while (1)
-    {
-        if (g_numberOfFemaelsInTheRollingGateQueue > 0)
-        {
+    if (g_numberOfFemaelsInTheRollingGateQueue > 0){
             sleep(randomIintegerInRange(3, 6)); // simulation for delay
             femalePersonInMetalDetectorForMales = dequeueNodeFromQueue(&femalesRollingGatQueue_mutex, &FrontRollingGateQueueFemales, &g_numberOfFemaelsInTheRollingGateQueue);
             printf("\n\nPerson %d Enter the Metal Detector For Females, Gernder %c, Official Document Needed is %s\n\n", femalePersonInMetalDetectorForMales.personID, femalePersonInMetalDetectorForMales.gender, g_OfficialDocument[femalePersonInMetalDetectorForMales.officialDocumentNeeded]);
@@ -591,7 +581,24 @@ void insertToFemalesMetalDetector()
             updateIndexOfQueue(&FrontRollingGateQueueFemales); // updateIndexOfQueue for RollingGateQueueFemales
             // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
             // fflush(stdout);
-        }
+    }
+    
+}
+
+
+void insertToMetalDetectors(){
+
+    int randomChoicFromRollingGates ;
+    int ToMalesMetalDetector =0;
+    int ToFemalesMetalDetector =1;
+    while (1)
+    {
+        randomChoicFromRollingGates=randomIintegerInRange(ToMalesMetalDetector,ToFemalesMetalDetector);
+        if (randomChoicFromRollingGates == 0)
+            insertToMalesMetalDetector();
+        else
+            insertToFemalesMetalDetector();   
+
     }
 }
 
