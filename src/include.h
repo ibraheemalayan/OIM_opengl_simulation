@@ -24,6 +24,7 @@
 #include "std.h"
 
 #define UISIG 7
+#define PERSON 1L
 
 enum MsgType
 {
@@ -53,9 +54,9 @@ typedef enum Location Location;
 typedef enum Gender gender;
 typedef enum MsgType MsgType;
 
-struct message
+struct message_payload
 {
-  MsgType msg_type; // first field of the message struct should be the message type
+  long msg_type; // first field of the message struct should be the message type
   int person_pid;
   float angriness;
   gender gender;
@@ -63,6 +64,14 @@ struct message
   Location current_location;
 };
 
-typedef struct message message;
+typedef struct message_payload message_payload;
+
+struct message_buf
+{
+  long mtype; // first field of the message struct should be the message type
+  message_payload payload;
+};
+
+typedef struct message_buf message_buf;
 
 #endif

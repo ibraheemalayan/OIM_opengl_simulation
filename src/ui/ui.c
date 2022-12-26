@@ -7,7 +7,6 @@
 HashTable *ht;
 
 int msg_q_id;
-message *message_queue_buffer;
 
 void paint_and_swap_frame();
 void background();
@@ -36,8 +35,6 @@ void setup_message_queue()
         perror("msgget, error getting queue");
         exit(2);
     }
-
-    message_queue_buffer = (message *)malloc(sizeof(message));
 
     printf("\n\nmessage queue: ready to read messages in the UI.\n");
 }
@@ -117,8 +114,10 @@ void update_people_locations()
 int read_message_queue(HashTable *ht)
 {
 
+    message_buf message_queue_buffer;
+
     // msg_type set to Zero to read the first message in the queue regarless of it its type
-    if (msgrcv(msg_q_id, message_queue_buffer, sizeof(message), 0, IPC_NOWAIT) == -1)
+    if (msgrcv(msg_q_id, &message_queue_buffer, sizeof(message_queue_buffer.payload), PERSON, IPC_NOWAIT | MSG_NOERROR) == -1)
     {
         if (errno == ENOMSG)
         {
@@ -131,32 +130,32 @@ int read_message_queue(HashTable *ht)
     }
 
     printf("received message:\n\n");
-    print_message(message_queue_buffer);
+    print_message(&(message_queue_buffer.payload));
 
-    if (message_queue_buffer->msg_type == PersonEntered)
+    if (message_queue_buffer.payload.msg_type == PersonEntered)
     {
 
-        Queue *current_queue = get_proper_queue_pointer(message_queue_buffer->current_location);
+        Queue *current_queue = get_proper_queue_pointer(message_queue_buffer.payload.current_location);
         Person *p = create_person(
-            message_queue_buffer->person_pid,
-            message_queue_buffer->index_in_queue,
-            message_queue_buffer->gender,
-            message_queue_buffer->angriness,
+            message_queue_buffer.payload.person_pid,
+            message_queue_buffer.payload.index_in_queue,
+            message_queue_buffer.payload.gender,
+            message_queue_buffer.payload.angriness,
             current_queue);
 
         p->destination_coords = get_queue_location_coords_for_index(current_queue, p->index_in_queue);
 
         ht_insert(ht, p->id, p);
     }
-    else if (message_queue_buffer->msg_type == PersonExited)
+    else if (message_queue_buffer.payload.msg_type == PersonExited)
     {
-        Person *p = ht_search(ht, message_queue_buffer->person_pid);
+        Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
         p->destination_coords.y = 1000;
     }
-    else if (message_queue_buffer->msg_type == PersonUpdated)
+    else if (message_queue_buffer.payload.msg_type == PersonUpdated)
     {
-        Person *p = ht_search(ht, message_queue_buffer->person_pid);
-        Queue *current_queue = get_proper_queue_pointer(message_queue_buffer->current_location);
+        Person *p = ht_search(ht, message_queue_buffer.payload.person_pid);
+        Queue *current_queue = get_proper_queue_pointer(message_queue_buffer.payload.current_location);
 
         if (p->current_queue != current_queue)
         {
@@ -164,12 +163,12 @@ int read_message_queue(HashTable *ht)
             p->current_queue = current_queue;
             current_queue->current_people++;
         }
-        p->index_in_queue = message_queue_buffer->index_in_queue;
+        p->index_in_queue = message_queue_buffer.payload.index_in_queue;
 
         p->destination_coords = get_queue_location_coords_for_index(current_queue, p->index_in_queue);
 
-        p->index_in_queue = message_queue_buffer->index_in_queue;
-        p->angriess = message_queue_buffer->angriness;
+        p->index_in_queue = message_queue_buffer.payload.index_in_queue;
+        p->angriess = message_queue_buffer.payload.angriness;
     }
 
     return 1;

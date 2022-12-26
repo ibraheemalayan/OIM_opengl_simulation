@@ -126,9 +126,9 @@ void draw_queues()
     draw_rectangle(QUEUE_B_X_VALUE, QUEUE_B2_Y_VALUE, QUEUE_B_WIDTH, QUEUE_B_HEIGHT, 220, 220, 220);
 }
 
-void print_message(message *buf)
+void print_message(message_payload *buf)
 {
-    printf("{\n\tmsg_type: %d", buf->msg_type);
+    printf("{\n\tmsg_type: %ld", buf->msg_type);
     printf("\n\tperson_pid: %d", buf->person_pid);
     printf("\n\tangriness: %f", buf->angriness);
     printf("\n\tgender: %i", buf->gender);
