@@ -10,14 +10,17 @@
 #include <pthread.h>
 #include "../include.h"
 
+#define SLEEP_MIN 100 * 1000 // 100 ms
+#define SLEEP_MAX 800 * 1000 // 800 ms
+
 struct personInformation
 {
         pid_t personID;                      // Process ip
         char gender;                         // F,M
         DocumentType officialDocumentNeeded; // "0"birth certificates, "1"travel documents, "2"family reunion documents, "3"ID-related problems
-        int timerForPatience;
         int indexLocationInTheHostQueue;
         int tiketNumberInGroupingArea;
+        Location currentLocation;
 };
 
 struct accessQueueNode

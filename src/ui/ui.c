@@ -260,7 +260,10 @@ int main(int argc, char **argv)
     queue_B1 = (Queue *)malloc(sizeof(Queue));
     queue_B2 = (Queue *)malloc(sizeof(Queue));
 
-    initialize_queues(queue_A1, queue_A2, queue_B1, queue_B2);
+    metal_detector = (Queue *)malloc(sizeof(Queue));
+    inner_grouping_area = (Queue *)malloc(sizeof(Queue));
+
+    initialize_queues(queue_A1, queue_A2, queue_B1, queue_B2, metal_detector, inner_grouping_area);
 
     ht = create_table(CAPACITY);
 

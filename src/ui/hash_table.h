@@ -223,8 +223,6 @@ void ht_insert(HashTable *table, int key, Person *value)
 
     if (current_item == NULL)
     {
-        printf("Inserting %d in a null\n", key);
-
         // Key does not exist.
         if (table->count == table->size)
         {

@@ -57,7 +57,10 @@ enum Location
   FemaleMetalDetectorQueue = 4,
   MetalDetector = 5,
   InnerGroupingArea = 6,
-  Teller // teller 1 will be 7, teller 2 will be 8 and so on
+  BxTeller = 7,
+  IxTeller = 8,
+  TxTeller = 9,
+  RxTeller = 10
 };
 
 typedef enum Location Location;
