@@ -35,7 +35,9 @@ Person *create_person(int id, int index, gender gen, float angriess, Queue *curr
 // TODO read values from config file
 void initialize_queues(
     Queue *queue_A1,
-    Queue *queue_A2)
+    Queue *queue_A2,
+    Queue *queue_B1,
+    Queue *queue_B2)
 {
     queue_A1->coords.x = QUEUE_A1_X_VALUE;
     queue_A1->coords.y = QUEUE_A1_Y_VALUE;
@@ -48,6 +50,18 @@ void initialize_queues(
     queue_A2->width = QUEUE_A2_WIDTH;
     queue_A2->height = QUEUE_A2_HEIGHT;
     queue_A2->current_people = 0;
+
+    queue_B1->coords.x = QUEUE_B_X_VALUE;
+    queue_B1->coords.y = QUEUE_B1_Y_VALUE;
+    queue_B1->width = QUEUE_B_WIDTH;
+    queue_B1->height = QUEUE_B_HEIGHT;
+    queue_B1->current_people = 0;
+
+    queue_B2->coords.x = QUEUE_B_X_VALUE;
+    queue_B2->coords.y = QUEUE_B2_Y_VALUE;
+    queue_B2->width = QUEUE_B_WIDTH;
+    queue_B2->height = QUEUE_B_HEIGHT;
+    queue_B2->current_people = 0;
 }
 
 Coordinates get_queue_location_coords_for_next(Queue *queue)
@@ -108,6 +122,8 @@ void draw_queues()
 {
     draw_rectangle(QUEUE_A1_X_VALUE, QUEUE_A1_Y_VALUE, QUEUE_A1_WIDTH, QUEUE_A1_HEIGHT, 220, 220, 220);
     draw_rectangle(QUEUE_A2_X_VALUE, QUEUE_A2_Y_VALUE, QUEUE_A2_WIDTH, QUEUE_A2_HEIGHT, 220, 220, 220);
+    draw_rectangle(QUEUE_B_X_VALUE, QUEUE_B1_Y_VALUE, QUEUE_B_WIDTH, QUEUE_B_HEIGHT, 220, 220, 220);
+    draw_rectangle(QUEUE_B_X_VALUE, QUEUE_B2_Y_VALUE, QUEUE_B_WIDTH, QUEUE_B_HEIGHT, 220, 220, 220);
 }
 
 void print_message(message *buf)
@@ -118,6 +134,24 @@ void print_message(message *buf)
     printf("\n\tgender: %i", buf->gender);
     printf("\n\tindex_in_queue: %i", buf->index_in_queue);
     printf("\n\tcurrent_location: %i\n}\n", buf->current_location);
+}
+
+Queue *get_proper_queue_pointer(Location current_location)
+{
+    switch (current_location)
+    {
+    case MaleOutsideGatesArea:
+        return queue_A1;
+    case FemaleOutsideGatesArea:
+        return queue_A2;
+    case MaleMetalDetectorQueue:
+        return queue_B1;
+    case FemaleMetalDetectorQueue:
+        return queue_B2;
+    default:
+        break;
+    }
+    return NULL;
 }
 
 #endif
