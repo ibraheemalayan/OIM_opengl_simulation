@@ -151,7 +151,14 @@ Queue *get_proper_queue_pointer(Location current_location)
     default:
         break;
     }
-    return NULL;
+
+    red_stdout();
+    printf("ERROR: get_proper_queue_pointer() - wrong location - %d\n", current_location);
+    reset_stdout();
+
+    sleep(1);
+
+    return MaleOutsideGatesArea;
 }
 
 #endif
