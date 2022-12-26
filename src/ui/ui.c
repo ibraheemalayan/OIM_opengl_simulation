@@ -23,7 +23,7 @@ void setup_message_queue()
 
     key_t key;
 
-    if ((key = ftok("msgq.txt", 'B')) == -1)
+    if ((key = ftok("ui_queue.bin", 30)) == -1)
     {
         perror("ftok, queue not found");
         exit(1);
@@ -35,8 +35,6 @@ void setup_message_queue()
         perror("msgget, error getting queue");
         exit(2);
     }
-
-    printf("\n\nmessage queue: ready to read messages in the UI.\n");
 }
 
 /* Handler for window-repaint event. Call back when the window first appears and

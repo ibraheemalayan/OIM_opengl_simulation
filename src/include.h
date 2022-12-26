@@ -33,10 +33,18 @@ enum MsgType
   PersonExited,
 };
 
+enum DocumentType
+{
+  BirthCertificate = 0,
+  TravelDocument,
+  FamilyReunion,
+  IDRelatedProblems
+};
+
 enum Gender
 {
-  Male,
-  Female
+  Male = 1,
+  Female = 2
 };
 
 enum Location
@@ -53,6 +61,7 @@ enum Location
 typedef enum Location Location;
 typedef enum Gender gender;
 typedef enum MsgType MsgType;
+typedef enum DocumentType DocumentType;
 
 struct message_payload
 {

@@ -8,12 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include "../include.h"
 
 struct personInformation
 {
-        pid_t personID;             // Process ip
-        char gender;                // F,M
-        int officialDocumentNeeded; // "0"birth certificates, "1"travel documents, "2"family reunion documents, "3"ID-related problems
+        pid_t personID;                      // Process ip
+        char gender;                         // F,M
+        DocumentType officialDocumentNeeded; // "0"birth certificates, "1"travel documents, "2"family reunion documents, "3"ID-related problems
         int timerForPatience;
         int indexLocationInTheHostQueue;
         int tiketNumberInGroupingArea;
@@ -25,4 +26,19 @@ struct accessQueueNode
         struct accessQueueNode *nextPesron;
 };
 
+struct parent_child_message_payload
+{
+        int index_in_queue; // index if inside a queue
+        Location current_location;
+};
+
+typedef struct parent_child_message_payload parent_child_message_payload;
+
+struct parent_message_buf
+{
+        long pid; // first field of the message struct should be the message type
+        parent_child_message_payload payload;
+};
+
+typedef struct parent_message_buf parent_message_buf;
 #endif
