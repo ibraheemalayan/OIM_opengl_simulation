@@ -3,9 +3,11 @@
 #include "../include.h"
 
 // TODOs
-// 1. Fork & Exec UI
+// 1. Fork & Exec UI | DONE
 // 2. Rename symbols that has Typos
 // 3. Color output & replace flush with reset_stdout
+// 4. Clean Up | DONE
+// 5. Why signals are used for children | DONE
 
 //..........Fuctions........................
 void readInputFile();
@@ -15,9 +17,14 @@ void printRollingGatesQueues();
 void printInfoForArrivalPerson(struct personInformation person);
 void start_simulation();
 void displyGroupingAreaQueue();
+void create_and_setup_message_queues(); // creates the message queue
+void clean_up();                        // cleans up the message queues, and kills the gui and all children
+void interrupt_sig_handler(int sig);
 
-//run Gui
-void runGui();
+int ui_msgq_id, children_msgq_id; // id of the UI message queue
+
+// run the GUI process
+void run_gui();
 
 // People creation
 void creatPeople();
@@ -49,7 +56,7 @@ void insertToTravelDocumentsTeller();
 void insertToFamilyReunionDocumentsTeller();
 void insertToIDRelatedProblemsTeller();
 
-//finish OIM
+// finish OIM
 void finishOIM();
 
 //..........Gloable Variables................
@@ -57,6 +64,8 @@ void finishOIM();
 // Number of Access people
 int g_peopleUntil8am;
 int g_peopleAfter8amUntil1pm;
+
+pid_t gui_pid = 0;
 
 // Gender Array
 char g_gender[2] = {'F', 'M'};
@@ -101,10 +110,10 @@ struct accessQueueNode *RearForIDRelatedProblemsTellerQueue = NULL;
 #define g_threshold 2
 
 // number of people that left OIM offices unhappy
-int numberOfPeopleThatLeftOIMofficesUnhappy =0;
+int numberOfPeopleThatLeftOIMofficesUnhappy = 0;
 
-//number of people that left OIM offices satisfied
-int numberOfPeopleThatLeftOIMofficesSatisfied =0;
+// number of people that left OIM offices satisfied
+int numberOfPeopleThatLeftOIMofficesSatisfied = 0;
 
 // shifting In arrival time
 int minShiftingInArrivalTime = 1;
@@ -155,31 +164,42 @@ pthread_mutex_t IDRelatedProblemsQueue_mutex = PTHREAD_MUTEX_INITIALIZER;
 int IndexOfTheProcessInsideTheHostQueue = 0;
 
 int main()
-{   //runGui();
+{
+
+    create_and_setup_message_queues();
+
+    run_gui();
+
+    // register signal handler for SIGINT to clean up
+    signal(SIGINT, interrupt_sig_handler);
+
     start_simulation();
+
+    clean_up();
+
     return 0;
 }
 
 void start_simulation()
 {
     printf("\n\n\n\n.......5:30 AM: People Start coming.......\n\n");
-    fflush(stdout);
+    reset_stdout();
 
     // Read input file
     readInputFile();
 
-    // Create the peocesses until 8 am 
+    // Create the peocesses until 8 am
     creatPeople();
 
     printf("\n\nIt's 8am:\n\n");
-    fflush(stdout);
+    reset_stdout();
 
     sleep(randomIntegerInRange(3, 6)); // simulation for time delaying
 
     printAccessQueues();
 
     printf("\n\nNumber of People Arrive Untial 8am : %d \n\n", g_peopleUntil8am);
-    fflush(stdout);
+    reset_stdout();
 
     // People Start Entering the Rolling Gate Dependent on their Gender
     sleep(randomIntegerInRange(3, 6)); // simulation for time delaying
@@ -221,11 +241,9 @@ void start_simulation()
     pthread_t p_thread9;
     pthread_create(&p_thread9, NULL, (void *)insertToAccessQueuesAfter8am, NULL);
 
-     /* finishOIM*/
+    /* finishOIM*/
     pthread_t p_thread10;
     pthread_create(&p_thread10, NULL, (void *)finishOIM, NULL);
-
-
 
     // printRollingGatesQueues();
     // printAccessQueues();
@@ -246,6 +264,8 @@ void start_simulation()
     pthread_join(p_thread8, NULL);
     pthread_join(p_thread9, NULL);
     pthread_join(p_thread10, NULL);
+
+    exit(0);
 }
 
 void readInputFile()
@@ -282,7 +302,7 @@ void readInputFile()
             // make a randome number of people within the range
 
             g_peopleUntil8am = randomIntegerInRange(l_range1, l_range2);
-            printf("\ng_peopleUntil8am:%d\n",g_peopleUntil8am);
+            printf("\ng_peopleUntil8am:%d\n", g_peopleUntil8am);
         }
 
         if (lineNumber == 2)
@@ -302,10 +322,8 @@ void readInputFile()
             // make a randome number of people within the range
 
             g_peopleAfter8amUntil1pm = randomIntegerInRange(l_range1, l_range2);
-            printf("\npeopleAfter8amUntil1pm:%d\n",g_peopleAfter8amUntil1pm);
+            printf("\npeopleAfter8amUntil1pm:%d\n", g_peopleAfter8amUntil1pm);
         }
-
-
     }
 
     fclose(fp);
@@ -446,7 +464,7 @@ void printAccessQueues()
     if ((FrontAccessQueueMales == NULL) && (RearAccessQueueMales == NULL))
     {
         printf("\n\nMales Access Queue is Empty\n");
-        fflush(stdout);
+        reset_stdout();
     }
     else
     {
@@ -456,7 +474,7 @@ void printAccessQueues()
         {
             sleep(1); // simulation for time delaying
             printf("%d--%c--%d--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded, temp->personInfo.timerForPatience);
-            fflush(stdout);
+            reset_stdout();
             temp = temp->nextPesron;
         }
     }
@@ -464,7 +482,7 @@ void printAccessQueues()
     if ((FrontAccessQueueFemales == NULL) && (RearAccessQueueFemales == NULL))
     {
         printf("\n\nFemales Access Queue is Empty\n");
-        fflush(stdout);
+        reset_stdout();
     }
     else
     {
@@ -474,7 +492,7 @@ void printAccessQueues()
         {
             sleep(1); // simulation for time delaying
             printf("%d--%c--%d--%d\n", temp->personInfo.personID, temp->personInfo.gender, temp->personInfo.officialDocumentNeeded, temp->personInfo.timerForPatience);
-            fflush(stdout);
+            reset_stdout();
             temp = temp->nextPesron;
         }
     }
@@ -619,7 +637,7 @@ void insertToMalesMetalDetector()
 
         malePersonInMetalDetectorForMales = dequeueNodeFromQueue(&malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
         printf("\n\nPerson %d Enter the Metal Detector For Males, Gernder %c, Official Document Needed is %s\n\n", malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender, g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
-        fflush(stdout);
+        reset_stdout();
         sleep(randomIntegerInRange(5, 8)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
         enqueueToQueue(malePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
         updateIndexOfQueue(&FrontRollingGateQueueMales); // updateIndexOfQueue for RollingGateQueueMales
@@ -636,12 +654,12 @@ void insertToFemalesMetalDetector()
 
         femalePersonInMetalDetectorForMales = dequeueNodeFromQueue(&femalesRollingGatQueue_mutex, &FrontRollingGateQueueFemales, &g_numberOfFemaelsInTheRollingGateQueue);
         printf("\n\nPerson %d Enter the Metal Detector For Females, Gernder %c, Official Document Needed is %s\n\n", femalePersonInMetalDetectorForMales.personID, femalePersonInMetalDetectorForMales.gender, g_OfficialDocument[femalePersonInMetalDetectorForMales.officialDocumentNeeded]);
-        fflush(stdout);
+        reset_stdout();
         sleep(randomIntegerInRange(5, 8)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
         enqueueToQueue(femalePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
         updateIndexOfQueue(&FrontRollingGateQueueFemales); // updateIndexOfQueue for RollingGateQueueFemales
                                                            // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
-                                                           // fflush(stdout);
+                                                           // reset_stdout();
     }
 }
 
@@ -672,7 +690,7 @@ void insertToTellersQueues()
             sleep(randomIntegerInRange(3, 6)); // simulation for delay
             Person = dequeueNodeFromQueue(&groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
             printf("\n\nPerson %d leave the Grouping Area Queue, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
-            fflush(stdout);
+            reset_stdout();
             sleep(randomIntegerInRange(4, 7)); // simulation for delaying while moving to Tellers Queuesas sleep between 5 to 8 seconds
             if (Person.officialDocumentNeeded == 0)
                 enqueueToQueue(Person, &BirthCertificatesQueue_mutex, &FrontForBirthCertificatesTellerQueue, &RearForBirthCertificatesTellerQueue, &g_numberOfpeopleInBirthCertificatesTellerQueue);
@@ -700,12 +718,13 @@ void insertToBirthCertificatesTeller()
             // sleep(randomIntegerInRange(3,6));//simulation for delay
             Person = dequeueNodeFromQueue(&BirthCertificatesQueue_mutex, &FrontForBirthCertificatesTellerQueue, &g_numberOfpeopleInBirthCertificatesTellerQueue);
             printf("\n\nPerson %d achieve the Birth Certificates Teller, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
-            fflush(stdout);
+            reset_stdout();
             sleep(randomIntegerInRange(10, 15));             // simulation for delay in the Birth Certificates Teller as sleep between 10 to 15 seconds
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the Birth Certificates Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
-            fflush(stdout);
-            if (leaving_OIM_Status == 0){
+            reset_stdout();
+            if (leaving_OIM_Status == 0)
+            {
                 numberOfPeopleThatLeftOIMofficesSatisfied++;
             }
             else
@@ -727,12 +746,13 @@ void insertToTravelDocumentsTeller()
             // sleep(randomIntegerInRange(3,6));//simulation for delay
             Person = dequeueNodeFromQueue(&TravelDocumentsQueue_mutex, &FrontForTravelDocumentsTellerQueue, &g_numberOfpeopleInTravelDocumentsTellerQueue);
             printf("\n\nPerson %d achieve the Travel Documents Teller, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
-            fflush(stdout);
+            reset_stdout();
             sleep(randomIntegerInRange(10, 15));             // simulation for delay in the Travel Documents Teller as sleep between 10 to 15 seconds
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the Travel Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
-            fflush(stdout);
-            if (leaving_OIM_Status == 0){
+            reset_stdout();
+            if (leaving_OIM_Status == 0)
+            {
                 numberOfPeopleThatLeftOIMofficesSatisfied++;
             }
             else
@@ -754,12 +774,13 @@ void insertToFamilyReunionDocumentsTeller()
             // sleep(randomIntegerInRange(3,6));//simulation for delay
             Person = dequeueNodeFromQueue(&FamilyReunionDocumentsQueue_mutex, &FrontForFamilyReunionDocumentsTellerQueue, &g_numberOfpeopleInFamilyReunionDocumentsTellerQueue);
             printf("\n\nPerson %d achieve the Family Reunion Documents Teller, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
-            fflush(stdout);
+            reset_stdout();
             sleep(randomIntegerInRange(10, 15));             // simulation for delay in the Family Reunion Documents Teller as sleep between 10 to 15 seconds
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the Family Reunion Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
-            fflush(stdout);
-            if (leaving_OIM_Status == 0){
+            reset_stdout();
+            if (leaving_OIM_Status == 0)
+            {
                 numberOfPeopleThatLeftOIMofficesSatisfied++;
             }
             else
@@ -781,12 +802,13 @@ void insertToIDRelatedProblemsTeller()
             // sleep(randomIntegerInRange(3,6));//simulation for delay
             Person = dequeueNodeFromQueue(&IDRelatedProblemsQueue_mutex, &FrontForIDRelatedProblemsTellerQueue, &g_numberOfpeopleInIDRelatedProblemsTellerQueue);
             printf("\n\nPerson %d achieve the ID Related Problems Teller, Gernder %c, Official Document Needed is %s\n\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded]);
-            fflush(stdout);
+            reset_stdout();
             sleep(randomIntegerInRange(10, 15));             // simulation for delay in the ID Related Problems Teller as sleep between 10 to 15 seconds
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the ID Related Problems Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
-            fflush(stdout);
-            if (leaving_OIM_Status == 0){
+            reset_stdout();
+            if (leaving_OIM_Status == 0)
+            {
                 numberOfPeopleThatLeftOIMofficesSatisfied++;
             }
             else
@@ -796,7 +818,8 @@ void insertToIDRelatedProblemsTeller()
     }
 }
 
-void insertToAccessQueuesAfter8am(){
+void insertToAccessQueuesAfter8am()
+{
     int i, pid;
     struct personInformation person = {0};
     for (i = 0; i < g_peopleAfter8amUntil1pm; i++)
@@ -854,43 +877,149 @@ void insertToAccessQueuesAfter8am(){
             exit(-2);
         }
     }
+
+    // TODO
     while (1)
     {
-        //don't kill thread 9
+        // don't kill thread 9
     }
-    
-
 }
 
 void printInfoForArrivalPerson(struct personInformation person)
 {
     printf("\n\nPerson %d arrived, Gernder %c, Official Document Needed is %s\n\n", person.personID, person.gender, g_OfficialDocument[person.officialDocumentNeeded]);
-    fflush(stdout);
+    reset_stdout();
 }
 
-void finishOIM(){
+void finishOIM()
+{
     while (1)
     {
         usleep(100);
-        if (numberOfPeopleThatLeftOIMofficesSatisfied > g_threshold || numberOfPeopleThatLeftOIMofficesUnhappy  > g_threshold)
+        if (numberOfPeopleThatLeftOIMofficesSatisfied > g_threshold || numberOfPeopleThatLeftOIMofficesUnhappy > g_threshold)
         {
             exit(0);
-        }  
+        }
     }
-    
-
 }
 
-void runGui(){
+void run_gui()
+{
 
-    pid_t pid =fork();
-    if (pid == -1){
-            printf("fork gui failure\n");
-            exit(-4);
-    }else if (pid == 0){
-            execlp("./bin/gui.o", "gui.o", NULL);
-            perror("\n> gui: exec failure\n");
-            exit(-2);
-            }
+    gui_pid = fork();
+    if (gui_pid == -1)
+    {
+        printf("fork gui failure\n");
+        exit(-4);
+    }
+    else if (gui_pid == 0)
+    {
+        execlp("./bin/gui.o", "gui.o", NULL);
+        perror("\n> gui: exec failure\n");
+        exit(-2);
+    }
+}
 
+void create_and_setup_message_queues()
+{
+
+    key_t ui_queue_key, children_queue_key;
+
+    // remove queue if exists
+    remove("ui_queue.bin");
+
+    // remove queue if exists
+    remove("children_queue.bin");
+
+    // create file to use as message queue key
+    system("touch ui_queue.bin");
+    system("chmod 666 ui_queue.bin");
+
+    // create file to use as message queue key
+    system("touch children_queue.bin");
+    system("chmod 666 children_queue.bin");
+
+    if ((ui_queue_key = ftok("ui_queue.bin", 30)) == -1)
+    {
+        perror("ftok");
+        exit(1);
+    }
+    if ((children_queue_key = ftok("children_queue.bin", 30)) == -1)
+    {
+        perror("ftok");
+        exit(1);
+    }
+
+    ui_msgq_id = msgget(children_queue_key, 0666 | IPC_CREAT);
+    if (ui_msgq_id == -1)
+    {
+        perror("msgget ui queue");
+        exit(2);
+    }
+
+    children_msgq_id = msgget(ui_queue_key, 0666 | IPC_CREAT);
+    if (children_msgq_id == -1)
+    {
+        perror("msgget children queue");
+        exit(2);
+    }
+
+    struct msqid_ds ui_queue_info;
+    // read existing message queue info into ui_queue_info
+    if (msgctl(ui_msgq_id, IPC_STAT, &ui_queue_info) == -1)
+    {
+        perror("Can not read message queue info");
+        exit(5);
+    }
+
+    ui_queue_info.msg_qbytes = 20480;
+
+    // increase buffer size
+    msgctl(ui_msgq_id, IPC_SET, &ui_queue_info);
+
+    struct msqid_ds children_queue_info;
+    // read existing message queue info into ui_queue_info
+    if (msgctl(children_msgq_id, IPC_STAT, &children_queue_info) == -1)
+    {
+        perror("Can not read message queue info");
+        exit(5);
+    }
+
+    children_queue_info.msg_qbytes = 20480;
+
+    // increase buffer size
+    msgctl(children_msgq_id, IPC_SET, &children_queue_info);
+
+    green_stdout();
+    printf("Message queues have been created\n");
+    reset_stdout();
+}
+
+void clean_up()
+{
+
+    if (gui_pid != 0)
+    {
+        kill(gui_pid, SIGKILL);
+        waitpid(gui_pid, NULL, 0);
+    }
+
+    // TODO kill and wait all children
+
+    // remove the message queue from the System V IPC
+    msgctl(ui_msgq_id, IPC_RMID, NULL);
+    msgctl(children_msgq_id, IPC_RMID, NULL);
+
+    // remove the queue file
+    remove("ui_queue.bin");
+    remove("children_queue.bin");
+}
+
+void interrupt_sig_handler(int sig)
+{
+    red_stdout();
+    printf("\n\nInterrupt signal received, cleaning up queues.\n");
+    clean_up();
+    reset_stdout();
+    exit(0);
 }
