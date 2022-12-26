@@ -7,7 +7,7 @@
 // 2. Rename symbols that has Typos
 // 3. Color output & replace flush with reset_stdout
 
-int ibraheem =-1;
+int ibraheem = -1;
 //..........Fuctions........................
 void readInputFile();
 int randomIntegerInRange(int lower, int upper);
@@ -566,52 +566,51 @@ void insertToFemalesRollingGateQueue()
 void insertToMalesMetalDetector()
 {
     struct personInformation malePersonInMetalDetectorForMales;
-    if (g_numberOfMaelsInTheRollingGateQueue > 0){
-            sleep(randomIntegerInRange(3, 6)); // simulation for delay
+    if (g_numberOfMaelsInTheRollingGateQueue > 0)
+    {
+        sleep(randomIntegerInRange(3, 6)); // simulation for delay
 
-            malePersonInMetalDetectorForMales = dequeueNodeFromQueue(&malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
-            printf("\n\nPerson %d Enter the Metal Detector For Males, Gernder %c, Official Document Needed is %s\n\n", malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender, g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
-            fflush(stdout);
-            sleep(randomIntegerInRange(5, 8)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
-            enqueueToQueue(malePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
-            updateIndexOfQueue(&FrontRollingGateQueueMales); // updateIndexOfQueue for RollingGateQueueMales
-            // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
+        malePersonInMetalDetectorForMales = dequeueNodeFromQueue(&malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
+        printf("\n\nPerson %d Enter the Metal Detector For Males, Gernder %c, Official Document Needed is %s\n\n", malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender, g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
+        fflush(stdout);
+        sleep(randomIntegerInRange(5, 8)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
+        enqueueToQueue(malePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
+        updateIndexOfQueue(&FrontRollingGateQueueMales); // updateIndexOfQueue for RollingGateQueueMales
+                                                         // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
     }
-    
 }
 
 void insertToFemalesMetalDetector()
 {
     struct personInformation femalePersonInMetalDetectorForMales;
-    if (g_numberOfFemaelsInTheRollingGateQueue > 0){
-            sleep(randomIintegerInRange(3, 6)); // simulation for delay
+    if (g_numberOfFemaelsInTheRollingGateQueue > 0)
+    {
+        sleep(randomIntegerInRange(3, 6)); // simulation for delay
 
-            femalePersonInMetalDetectorForMales = dequeueNodeFromQueue(&femalesRollingGatQueue_mutex, &FrontRollingGateQueueFemales, &g_numberOfFemaelsInTheRollingGateQueue);
-            printf("\n\nPerson %d Enter the Metal Detector For Females, Gernder %c, Official Document Needed is %s\n\n", femalePersonInMetalDetectorForMales.personID, femalePersonInMetalDetectorForMales.gender, g_OfficialDocument[femalePersonInMetalDetectorForMales.officialDocumentNeeded]);
-            fflush(stdout);
-            sleep(randomIntegerInRange(5, 8)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
-            enqueueToQueue(femalePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
-            updateIndexOfQueue(&FrontRollingGateQueueFemales); // updateIndexOfQueue for RollingGateQueueFemales
-            // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
-            // fflush(stdout);
+        femalePersonInMetalDetectorForMales = dequeueNodeFromQueue(&femalesRollingGatQueue_mutex, &FrontRollingGateQueueFemales, &g_numberOfFemaelsInTheRollingGateQueue);
+        printf("\n\nPerson %d Enter the Metal Detector For Females, Gernder %c, Official Document Needed is %s\n\n", femalePersonInMetalDetectorForMales.personID, femalePersonInMetalDetectorForMales.gender, g_OfficialDocument[femalePersonInMetalDetectorForMales.officialDocumentNeeded]);
+        fflush(stdout);
+        sleep(randomIntegerInRange(5, 8)); // simulation for delay in the Metal Detector as sleep between 5 to 8 seconds
+        enqueueToQueue(femalePersonInMetalDetectorForMales, &groupingAreaQueue_mutex, &FrontForGroupingAreaQueue, &RearForGroupingAreaQueue, &g_numberOfpeopleInGroupingArea);
+        updateIndexOfQueue(&FrontRollingGateQueueFemales); // updateIndexOfQueue for RollingGateQueueFemales
+                                                           // printf("Person %d leave the Metal Detector For Males and Enter the Grouping Area, Gernder %c, Official Document Needed is %s\n",malePersonInMetalDetectorForMales.personID, malePersonInMetalDetectorForMales.gender,g_OfficialDocument[malePersonInMetalDetectorForMales.officialDocumentNeeded]);
+                                                           // fflush(stdout);
     }
-    
 }
 
+void insertToMetalDetectors()
+{
 
-void insertToMetalDetectors(){
-
-    int randomChoicFromRollingGates ;
-    int ToMalesMetalDetector =0;
-    int ToFemalesMetalDetector =1;
+    int randomChoicFromRollingGates;
+    int ToMalesMetalDetector = 0;
+    int ToFemalesMetalDetector = 1;
     while (1)
     {
-        randomChoicFromRollingGates=randomIintegerInRange(ToMalesMetalDetector,ToFemalesMetalDetector);
+        randomChoicFromRollingGates = randomIntegerInRange(ToMalesMetalDetector, ToFemalesMetalDetector);
         if (randomChoicFromRollingGates == 0)
             insertToMalesMetalDetector();
         else
-            insertToFemalesMetalDetector();   
-
+            insertToFemalesMetalDetector();
     }
 }
 
