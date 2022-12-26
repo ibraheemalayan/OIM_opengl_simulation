@@ -123,6 +123,10 @@ pthread_mutex_t TravelDocumentsQueue_mutex=PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t FamilyReunionDocumentsQueue_mutex=PTHREAD_MUTEX_INITIALIZER;  
 pthread_mutex_t IDRelatedProblemsQueue_mutex=PTHREAD_MUTEX_INITIALIZER;  
 
+//Index of the process inside the host Queue
+//To pass it as argument when create the process
+int  IndexOfTheProcessInsideTheHostQueue =0;
+
 int main()
 {
 	simulation();
@@ -154,9 +158,7 @@ void simulation(){
 	//People Start Entering the Rolling Gate Dependent on their Gender
 	sleep(randomIintegerInRange(3,6));//simulation for time delaying
 	printf("\n\nPeople Start Entering the Rolling Gate Dependes on their Gender >>>>>>\n\n");
-	fflush(stdout);
-	sleep(randomIintegerInRange(3,6));//simulation for time delaying
-   
+
 	/* create a new thread that will keep move nodes from males access queue to Rolling Gate Queue "Males" */
   	pthread_t p_thread1;
 	pthread_create(&p_thread1, NULL,  (void *)insertToMalesRollingGateQueue, NULL);
@@ -287,9 +289,6 @@ void enqueueToQueue(struct personInformation personInf, pthread_mutex_t *mutex, 
                 }
                 sleep(randomIintegerInRange(3,6));//simulation for time delaying
                 (*numberOfPeopleInTheQueue)++;
-                //printf("\n\nPerson %d Enter %s Teller Queue, Gender %c,Official Document Needed is %s\n\n",person.personID,g_OfficialDocument[person.officialDocumentNeeded],person.gender,g_OfficialDocument[person.officialDocumentNeeded]);
-                //fflush(stdout);
-
           }
     pthread_mutex_unlock(mutex);
 }
@@ -403,8 +402,18 @@ void displyRollingGatesQueues(){
 void creatPeople(){
          
         int  i,pid;
-        struct personInformation person;
+        struct personInformation person={0};
         for(i =0;i<g_peopleUntil8am;i++){
+            person.personID = 0;
+			person.gender=g_gender[randomIintegerInRange(0,1)];//person.gender = g_gender[randomIintegerInRange(0,1)];
+			person.officialDocumentNeeded  = randomIintegerInRange(0,3);//person.officialDocumentNeeded  = randomIintegerInRange(0,3);
+            person.timerForPatience= randomIintegerInRange(20,30);
+            person.indexLocationInTheHostQueue =-1;
+            person.tiketNumberInGroupingArea=-1;
+            if(person.gender == 'M')
+                    IndexOfTheProcessInsideTheHostQueue=g_numberOfMalesInAccessQueue;
+                else
+                    IndexOfTheProcessInsideTheHostQueue=g_numberOfFemalesInAccessQueue;
             pid =fork();
             if (pid == -1){
                 printf("fork failure\n");
@@ -412,13 +421,7 @@ void creatPeople(){
             }    
             else if (pid > 0){
                 // Print the info for the arrival person:
-                
                 person.personID = pid;
-			    person.gender=g_gender[randomIintegerInRange(0,1)];//person.gender = g_gender[randomIintegerInRange(0,1)];
-			    person.officialDocumentNeeded  = randomIintegerInRange(0,3);//person.officialDocumentNeeded  = randomIintegerInRange(0,3);
-                person.timerForPatience= randomIintegerInRange(20,30);
-                person.indexLocationInTheHostQueue=-1;
-                person.tiketNumberInGroupingArea=-1;
 			    printInfoForArrivalPerson(person);
 			    sleep(randomIintegerInRange(minShiftingInArrivalTime,maxShiftingInArrivalTime));//simulation for time delaying for arrival time
                 if(person.gender == 'M')
@@ -427,60 +430,38 @@ void creatPeople(){
                     enqueueToQueue(person, &femalesAccessQueue_mutex, &FrontAccessQueueFemales, &RearAccessQueueFemales, &g_numberOfFemalesInAccessQueue);
                 }
             else if (pid == 0){
-                char data[20]; //person          
-                execlp("bin/child.o", "child", data, "&", 0);
+                
+                //Passing argument 
+                char indexLocationInTheHostQueue[10]; 
+                sprintf(indexLocationInTheHostQueue, "%d", IndexOfTheProcessInsideTheHostQueue);
+              
+                
+                char pid[10]; 
+                sprintf(pid, "%d", getpid());
+
+                char officialDocumentNeeded[10]; 
+                sprintf(officialDocumentNeeded, "%d", person.officialDocumentNeeded);
+
+                char gender[2] = {person.gender , '\0'};
+
+                char timerForPatience[10]; 
+                sprintf(timerForPatience, "%d", person.timerForPatience);
+
+                char tiketNumberInGroupingArea[10]; 
+                sprintf(tiketNumberInGroupingArea, "%d", person.tiketNumberInGroupingArea);
+
+                execlp("bin/child.o", "child", pid, officialDocumentNeeded, gender, timerForPatience,tiketNumberInGroupingArea, indexLocationInTheHostQueue, "&", 0);
                 perror("\n\nchild: exec\n\n");
-                return 3;
+                exit (-2);
             }
         }         
-/*
-        int i,pid;
-        for(i =0;i<g_peopleUntil8am;i++){
-                
-		
-		if ((pid = fork()) == -1) {
-                        printf("fork failure\n");
-                        exit (-1);
-                }
-                if (pid != 0){
-      			    // Print the info for the arrival person:
-                    struct personInformation person;
-                    person.personID = pid;
-			        person.gender=g_gender[randomIintegerInRange(1,1)];//person.gender = g_gender[randomIintegerInRange(0,1)];
-			        person.officialDocumentNeeded  = randomIintegerInRange(0,0);//person.officialDocumentNeeded  = randomIintegerInRange(0,3);
-                    person.timerForPatience= randomIintegerInRange(20,30);
-                    person.indexLocationInTheHostQueue=-1;
-                    person.tiketNumberInGroupingArea=-1;
-			        printInfoForArrivalPerson(person);
-			        sleep(randomIintegerInRange(minShiftingInArrivalTime,maxShiftingInArrivalTime));//simulation for time delaying for arrival time
-                    if(person.gender == 'M')
-                        enqueueToQueue(person, &malesAccessQueue_mutex, FrontAccessQueueMales, RearAccessQueueMales, &g_numberOfMalesInAccessQueue);
-                    else
-                        enqueueToQueue(person, &femalesAccessQueue_mutex, FrontAccessQueueFemales, RearAccessQueueFemales, &g_numberOfFemalesInAccessQueue);
-                }
-		        else
-			        break;//exit(-1);//pause();
-        }
 
-        if (pid == 0){
-            childSensitiveSignals();
-            while (1)
-            {
-                //Pause until reseve signal from thread to move inside the host queue or
-                //until reseve signal from thread to move from queue to anothr 
-                pause(); 
-            } 
-        }
-        */
 }
-
 
 void insertToMalesRollingGateQueue() {
     struct personInformation Person;	
     while(1){
 	if (g_numberOfMaelsInTheRollingGateQueue < g_threshold && g_numberOfMalesInAccessQueue > 0){
-		printf("\n\ng_numberOfMaelsInTheRollingGateQueue:%d    g_numberOfMalesInAccessQueue:%d   \n\n",g_numberOfMaelsInTheRollingGateQueue,g_numberOfMalesInAccessQueue);
-		fflush(stdout);
         sleep(randomIintegerInRange(3,6));//simulation for dealy time for  moving from Access queue to Rolling gate queue
 		Person = dequeueNodeFromQueue(&malesAccessQueue_mutex,&FrontAccessQueueMales, &g_numberOfMalesInAccessQueue);
         enqueueToQueue(Person, &malesRollingGatQueue_mutex, &FrontRollingGateQueueMales, &RearRollingGateQueueMales, &g_numberOfMaelsInTheRollingGateQueue);
@@ -653,4 +634,3 @@ void printInfoForArrivalPerson(struct personInformation person){
 	printf("\n\nPerson %d arrived, Gernder %c, Official Document Needed is %s\n\n",person.personID, person.gender,g_OfficialDocument[person.officialDocumentNeeded]);
 	fflush(stdout);
 }
-
