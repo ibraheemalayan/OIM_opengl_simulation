@@ -16,6 +16,9 @@ void printInfoForArrivalPerson(struct personInformation person);
 void start_simulation();
 void displyGroupingAreaQueue();
 
+//run Gui
+void runGui();
+
 // People creation
 void creatPeople();
 
@@ -45,6 +48,9 @@ void insertToBirthCertificatesTeller();
 void insertToTravelDocumentsTeller();
 void insertToFamilyReunionDocumentsTeller();
 void insertToIDRelatedProblemsTeller();
+
+//finish OIM
+void finishOIM();
 
 //..........Gloable Variables................
 
@@ -92,7 +98,13 @@ struct accessQueueNode *FrontForIDRelatedProblemsTellerQueue = NULL;
 struct accessQueueNode *RearForIDRelatedProblemsTellerQueue = NULL;
 
 // Threshold
-#define g_threshold 3
+#define g_threshold 2
+
+// number of people that left OIM offices unhappy
+int numberOfPeopleThatLeftOIMofficesUnhappy =0;
+
+//number of people that left OIM offices satisfied
+int numberOfPeopleThatLeftOIMofficesSatisfied =0;
 
 // shifting In arrival time
 int minShiftingInArrivalTime = 1;
@@ -143,7 +155,7 @@ pthread_mutex_t IDRelatedProblemsQueue_mutex = PTHREAD_MUTEX_INITIALIZER;
 int IndexOfTheProcessInsideTheHostQueue = 0;
 
 int main()
-{
+{   //runGui();
     start_simulation();
     return 0;
 }
@@ -209,6 +221,10 @@ void start_simulation()
     pthread_t p_thread9;
     pthread_create(&p_thread9, NULL, (void *)insertToAccessQueuesAfter8am, NULL);
 
+     /* finishOIM*/
+    pthread_t p_thread10;
+    pthread_create(&p_thread10, NULL, (void *)finishOIM, NULL);
+
 
 
     // printRollingGatesQueues();
@@ -229,6 +245,7 @@ void start_simulation()
     pthread_join(p_thread7, NULL);
     pthread_join(p_thread8, NULL);
     pthread_join(p_thread9, NULL);
+    pthread_join(p_thread10, NULL);
 }
 
 void readInputFile()
@@ -688,6 +705,11 @@ void insertToBirthCertificatesTeller()
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the Birth Certificates Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
             fflush(stdout);
+            if (leaving_OIM_Status == 0){
+                numberOfPeopleThatLeftOIMofficesSatisfied++;
+            }
+            else
+                numberOfPeopleThatLeftOIMofficesUnhappy++;
             updateIndexOfQueue(&FrontForBirthCertificatesTellerQueue); // updateIndexOfQueue for BirthCertificatesTellerQueue
         }
     }
@@ -710,6 +732,11 @@ void insertToTravelDocumentsTeller()
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the Travel Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
             fflush(stdout);
+            if (leaving_OIM_Status == 0){
+                numberOfPeopleThatLeftOIMofficesSatisfied++;
+            }
+            else
+                numberOfPeopleThatLeftOIMofficesUnhappy++;
             updateIndexOfQueue(&FrontForTravelDocumentsTellerQueue); // updateIndexOfQueue for TravelDocumentsTellerQueue
         }
     }
@@ -732,6 +759,11 @@ void insertToFamilyReunionDocumentsTeller()
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the Family Reunion Documents Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
             fflush(stdout);
+            if (leaving_OIM_Status == 0){
+                numberOfPeopleThatLeftOIMofficesSatisfied++;
+            }
+            else
+                numberOfPeopleThatLeftOIMofficesUnhappy++;
             updateIndexOfQueue(&FrontForFamilyReunionDocumentsTellerQueue); // updateIndexOfQueue for FamilyReunionDocumentsTellerQueue
         }
     }
@@ -754,6 +786,11 @@ void insertToIDRelatedProblemsTeller()
             leaving_OIM_Status = randomIntegerInRange(0, 1); // 0:Satisfied ,  1:Unhappy
             printf("Person %d leave the ID Related Problems Teller, Gernder %c, Official Document Needed is %s, leaving OIM Status :%s\n", Person.personID, Person.gender, g_OfficialDocument[Person.officialDocumentNeeded], g_leaving_OIM_Status[leaving_OIM_Status]);
             fflush(stdout);
+            if (leaving_OIM_Status == 0){
+                numberOfPeopleThatLeftOIMofficesSatisfied++;
+            }
+            else
+                numberOfPeopleThatLeftOIMofficesUnhappy++;
             updateIndexOfQueue(&FrontForIDRelatedProblemsTellerQueue); // updateIndexOfQueue for IDRelatedProblemsTellerQueue
         }
     }
@@ -829,4 +866,31 @@ void printInfoForArrivalPerson(struct personInformation person)
 {
     printf("\n\nPerson %d arrived, Gernder %c, Official Document Needed is %s\n\n", person.personID, person.gender, g_OfficialDocument[person.officialDocumentNeeded]);
     fflush(stdout);
+}
+
+void finishOIM(){
+    while (1)
+    {
+        usleep(100);
+        if (numberOfPeopleThatLeftOIMofficesSatisfied > g_threshold || numberOfPeopleThatLeftOIMofficesUnhappy  > g_threshold)
+        {
+            exit(0);
+        }  
+    }
+    
+
+}
+
+void runGui(){
+
+    pid_t pid =fork();
+    if (pid == -1){
+            printf("fork gui failure\n");
+            exit(-4);
+    }else if (pid == 0){
+            execlp("./bin/gui.o", "gui.o", NULL);
+            perror("\n> gui: exec failure\n");
+            exit(-2);
+            }
+
 }
