@@ -7,7 +7,6 @@
 // 2. Rename symbols that has Typos
 // 3. Color output & replace flush with reset_stdout
 
-int ibraheem = -1;
 //..........Fuctions........................
 void readInputFile();
 int randomIntegerInRange(int lower, int upper);
@@ -38,6 +37,7 @@ void insertToFemalesRollingGateQueue();
 void insertToFemalesMetalDetector();
 void insertToMalesMetalDetector();
 void insertToMetalDetectors();
+void insertToAccessQueuesAfter8am();
 
 // teller employees threads
 void insertToTellersQueues();
@@ -156,7 +156,7 @@ void start_simulation()
     // Read input file
     readInputFile();
 
-    // Create the peocesses
+    // Create the peocesses until 8 am 
     creatPeople();
 
     printf("\n\nIt's 8am:\n\n");
@@ -205,6 +205,12 @@ void start_simulation()
     pthread_t p_thread8;
     pthread_create(&p_thread8, NULL, (void *)insertToIDRelatedProblemsTeller, NULL);
 
+    /* add peopel after 8 am */
+    pthread_t p_thread9;
+    pthread_create(&p_thread9, NULL, (void *)insertToAccessQueuesAfter8am, NULL);
+
+
+
     // printRollingGatesQueues();
     // printAccessQueues();
     // Number of Females and males
@@ -222,6 +228,7 @@ void start_simulation()
     pthread_join(p_thread6, NULL);
     pthread_join(p_thread7, NULL);
     pthread_join(p_thread8, NULL);
+    pthread_join(p_thread9, NULL);
 }
 
 void readInputFile()
@@ -258,7 +265,30 @@ void readInputFile()
             // make a randome number of people within the range
 
             g_peopleUntil8am = randomIntegerInRange(l_range1, l_range2);
+            printf("\ng_peopleUntil8am:%d\n",g_peopleUntil8am);
         }
+
+        if (lineNumber == 2)
+        { // read peopleAfter8amUntil1pm
+            // printf("%s", line);
+
+            // Splite the line
+            char delim[] = " ";
+            char *ptr = strtok(line, delim);
+
+            ptr = strtok(NULL, delim);
+            int l_range1 = atoi(ptr);
+
+            ptr = strtok(NULL, delim);
+            int l_range2 = atoi(ptr);
+
+            // make a randome number of people within the range
+
+            g_peopleAfter8amUntil1pm = randomIntegerInRange(l_range1, l_range2);
+            printf("\npeopleAfter8amUntil1pm:%d\n",g_peopleAfter8amUntil1pm);
+        }
+
+
     }
 
     fclose(fp);
@@ -727,6 +757,72 @@ void insertToIDRelatedProblemsTeller()
             updateIndexOfQueue(&FrontForIDRelatedProblemsTellerQueue); // updateIndexOfQueue for IDRelatedProblemsTellerQueue
         }
     }
+}
+
+void insertToAccessQueuesAfter8am(){
+    int i, pid;
+    struct personInformation person = {0};
+    for (i = 0; i < g_peopleAfter8amUntil1pm; i++)
+    {
+        person.personID = 0;
+        person.gender = g_gender[randomIntegerInRange(0, 1)];       // person.gender = g_gender[randomIntegerInRange(0,1)];
+        person.officialDocumentNeeded = randomIntegerInRange(0, 3); // person.officialDocumentNeeded  = randomIntegerInRange(0,3);
+        person.timerForPatience = randomIntegerInRange(20, 30);
+        person.indexLocationInTheHostQueue = -1;
+        person.tiketNumberInGroupingArea = -1;
+        if (person.gender == 'M')
+            IndexOfTheProcessInsideTheHostQueue = g_numberOfMalesInAccessQueue;
+        else
+            IndexOfTheProcessInsideTheHostQueue = g_numberOfFemalesInAccessQueue;
+        pid = fork();
+        if (pid == -1)
+        {
+            printf("fork failure\n");
+            exit(-1);
+        }
+        else if (pid > 0)
+        {
+            // Print the info for the arrival person:
+            person.personID = pid;
+            printInfoForArrivalPerson(person);
+            sleep(randomIntegerInRange(minShiftingInArrivalTime, maxShiftingInArrivalTime)); // simulation for time delaying for arrival time
+            if (person.gender == 'M')
+                enqueueToQueue(person, &malesAccessQueue_mutex, &FrontAccessQueueMales, &RearAccessQueueMales, &g_numberOfMalesInAccessQueue);
+            else
+                enqueueToQueue(person, &femalesAccessQueue_mutex, &FrontAccessQueueFemales, &RearAccessQueueFemales, &g_numberOfFemalesInAccessQueue);
+        }
+        else if (pid == 0)
+        {
+
+            // Passing argument
+            char indexLocationInTheHostQueue[10];
+            sprintf(indexLocationInTheHostQueue, "%d", IndexOfTheProcessInsideTheHostQueue);
+
+            char pid[10];
+            sprintf(pid, "%d", getpid());
+
+            char officialDocumentNeeded[10];
+            sprintf(officialDocumentNeeded, "%d", person.officialDocumentNeeded);
+
+            char gender[2] = {person.gender, '\0'};
+
+            char timerForPatience[10];
+            sprintf(timerForPatience, "%d", person.timerForPatience);
+
+            char tiketNumberInGroupingArea[10];
+            sprintf(tiketNumberInGroupingArea, "%d", person.tiketNumberInGroupingArea);
+
+            execlp("./bin/child.o", "child.o", pid, officialDocumentNeeded, gender, timerForPatience, tiketNumberInGroupingArea, indexLocationInTheHostQueue, "&", NULL);
+            perror("\n> child: exec\n");
+            exit(-2);
+        }
+    }
+    while (1)
+    {
+        //don't kill thread 9
+    }
+    
+
 }
 
 void printInfoForArrivalPerson(struct personInformation person)
