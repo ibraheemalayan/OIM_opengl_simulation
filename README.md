@@ -4,7 +4,7 @@ A multi-processing application that simulates the daily operation of the occupat
 
 > this project is a part of the **Real Time Applications & Embedded Systems (ENCS4330)** course at [BZU](https://www.birzeit.edu).
 
-## Demo
+## ⚠️ THIS PROJECT HAS NEVER BEEN FINISHED, IT IS MISSING SOME FEATURES & HAS SOME BUGS ⚠️
 
 
 <!-- TODO Demo Video -->
